@@ -1,0 +1,52 @@
+# draft.yml - Final Blueprint Schema (PURE EXPENSE LOGGER)
+models:
+  User:
+    name: string
+    email: string:unique
+    password: string
+    timestamps: true
+    softdeletes: true
+
+  Category:
+    name: string
+    user_id: id:foreign
+    icon: string:nullable
+    softdeletes: true
+    timestamps: true
+
+  Transaction:
+    user_id: id:foreign
+    category_id: id:foreign:nullable
+    amount: decimal:10,2
+    description: string:nullable
+    date: date
+    softdeletes: true
+    timestamps: true
+
+  Budget:
+    user_id: id:foreign
+    category_id: id:foreign:nullable:onDelete(cascade)
+    limit: decimal:10,2
+    period: enum:'monthly','yearly'
+    start_date: date
+    end_date: date:nullable
+    timestamps: true
+
+controllers:
+  Category:
+    resource: api # Changed from 'true'
+    requests:
+      store: StoreCategoryRequest
+      update: UpdateCategoryRequest
+
+  Transaction:
+    resource: api # Changed from 'true'
+    requests:
+      store: StoreTransactionRequest
+      update: UpdateTransactionRequest
+
+  Budget:
+    resource: api # Changed from 'true'
+    requests:
+      store: StoreBudgetRequest
+      update: UpdateBudgetRequest
