@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('budgets', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id');
-            $table->foreignId('category_id');
+            $table->foreignId('category_id')->nullable(); // Nullable for overall budgets
             $table->decimal('limit', 10, 2);
             $table->enum('period', ['monthly', 'yearly']);
             $table->date('start_date');

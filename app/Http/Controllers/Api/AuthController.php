@@ -7,7 +7,6 @@ use App\Http\Requests\LoginUserRequest;
 use App\Http\Requests\RegisterUserRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -44,18 +43,17 @@ class AuthController extends Controller
     {
         // The request is already validated by LoginUserRequest
 
-        // Attempt to authenticate the user
-        if (! Auth::attempt($request->only('email', 'password'))) {
-            // If authentication fails
+        // Find the user by email
+        $user = User::where('email', $request->email)->first();
+
+        // Check if user exists and password matches
+        if (! $user || ! password_verify($request->password, $user->password)) {
             return response()->json([
                 'message' => 'Invalid credentials',
             ], 401); // 401 Unauthorized
         }
 
-        // If authentication is successful
-        $user = User::where('email', $request->email)->firstOrFail();
-
-        // Revoke any old tokens
+        // If authentication is successful, revoke any old tokens
         $user->tokens()->delete();
 
         // Create a new token
@@ -73,7 +71,12 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         // Revoke the token that was used to authenticate the current request
-        $request->user()->currentAccessToken()->delete();
+        $token = $request->user()->currentAccessToken();
+
+        // Check if it's an actual token (not a TransientToken from testing)
+        if ($token && method_exists($token, 'delete')) {
+            $token->delete();
+        }
 
         return response()->json([
             'message' => 'Logged out successfully',
