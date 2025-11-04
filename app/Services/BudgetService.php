@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Budget;
 use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Support\Carbon;
 
 /**
@@ -12,6 +13,26 @@ use Illuminate\Support\Carbon;
  */
 class BudgetService
 {
+    public function createBudgetForUser(User $user, array $payload): Budget
+    {
+        $budget = $user->budgets()->create($payload);
+
+        return $budget->refresh();
+    }
+
+    public function updateBudget(Budget $budget, array $payload): Budget
+    {
+        $budget->fill($payload);
+        $budget->save();
+
+        return $budget->refresh();
+    }
+
+    public function deleteBudget(Budget $budget): void
+    {
+        $budget->delete();
+    }
+
     /**
      * Calculate the progress and spending for a given budget.
      *

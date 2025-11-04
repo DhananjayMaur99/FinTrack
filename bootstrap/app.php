@@ -5,7 +5,6 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Response; // <-- 1. ADD THIS
 use Symfony\Component\HttpKernel\Exception\HttpException; // <-- 2. ADD THIS
-use Throwable; // <-- 3. ADD THIS
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(

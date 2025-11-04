@@ -20,9 +20,8 @@ class CategoryUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string'],
-            'user_id' => ['required', 'integer', 'exists:foreigns,id'],
-            'icon' => ['required', 'string', 'max:nullable'],
+            'name' => ['sometimes', 'string', 'max:255'],
+            'icon' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
     }
 }

@@ -2,33 +2,43 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use App\Http\Requests\CategoryStoreRequest;
+use App\Http\Requests\CategoryUpdateRequest;
 use App\Models\Category;
-use App\Models\Foreign;
-use App\Models\UpdateCategoryRequest;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use JMac\Testing\Traits\AdditionalAssertions;
+use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
-/**
- * @see \App\Http\Controllers\CategoryController
- */
 final class CategoryControllerTest extends TestCase
 {
-    use AdditionalAssertions, RefreshDatabase, WithFaker;
+    use AdditionalAssertions;
+    use RefreshDatabase;
+    use WithFaker;
 
     #[Test]
-    public function index_behaves_as_expected(): void
+    public function index_returns_only_authenticated_users_categories(): void
     {
-        $categories = Category::factory()->count(3)->create();
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
 
-        $response = $this->get(route('categories.index'));
+        $ownedCategories = Category::factory()->count(2)->for($user)->create();
+        $foreignCategory = Category::factory()->for($otherUser)->create();
+
+        Sanctum::actingAs($user);
+
+        $response = $this->getJson(route('categories.index'));
 
         $response->assertOk();
-        $response->assertJsonStructure([]);
+        $response->assertJsonCount($ownedCategories->count(), 'data');
+        foreach ($ownedCategories as $category) {
+            $response->assertJsonFragment(['id' => $category->id]);
+        }
+        $response->assertJsonMissing(['id' => $foreignCategory->id]);
     }
-
 
     #[Test]
     public function store_uses_form_request_validation(): void
@@ -36,47 +46,53 @@ final class CategoryControllerTest extends TestCase
         $this->assertActionUsesFormRequest(
             \App\Http\Controllers\CategoryController::class,
             'store',
-            \App\Http\Requests\CategoryStoreRequest::class
+            CategoryStoreRequest::class
         );
     }
 
     #[Test]
-    public function store_saves(): void
+    public function store_creates_category_for_authenticated_user(): void
     {
-        $name = fake()->name();
-        $user = Foreign::factory()->create();
-        $icon = fake()->word();
+        $user = User::factory()->create();
 
-        $response = $this->post(route('categories.store'), [
-            'name' => $name,
-            'user_id' => $user->id,
-            'icon' => $icon,
-        ]);
+        Sanctum::actingAs($user);
 
-        $categories = Category::query()
-            ->where('name', $name)
-            ->where('user_id', $user->id)
-            ->where('icon', $icon)
-            ->get();
-        $this->assertCount(1, $categories);
-        $category = $categories->first();
+        $payload = [
+            'name' => $this->faker->words(2, true),
+            'icon' => $this->faker->optional()->lexify('icon-????'),
+        ];
+
+        $response = $this->postJson(route('categories.store'), $payload);
 
         $response->assertCreated();
-        $response->assertJsonStructure([]);
-    }
+        $response->assertJsonFragment([
+            'name' => $payload['name'],
+            'icon' => $payload['icon'],
+        ]);
 
+        $this->assertDatabaseHas('categories', [
+            'user_id' => $user->id,
+            'name' => $payload['name'],
+            'icon' => $payload['icon'],
+        ]);
+    }
 
     #[Test]
-    public function show_behaves_as_expected(): void
+    public function show_returns_category_for_owner(): void
     {
-        $category = Category::factory()->create();
+        $user = User::factory()->create();
+        $category = Category::factory()->for($user)->create();
 
-        $response = $this->get(route('categories.show', $category));
+        Sanctum::actingAs($user);
+
+        $response = $this->getJson(route('categories.show', $category));
 
         $response->assertOk();
-        $response->assertJsonStructure([]);
+        $response->assertJsonFragment([
+            'id' => $category->id,
+            'name' => $category->name,
+        ]);
     }
-
 
     #[Test]
     public function update_uses_form_request_validation(): void
@@ -84,55 +100,48 @@ final class CategoryControllerTest extends TestCase
         $this->assertActionUsesFormRequest(
             \App\Http\Controllers\CategoryController::class,
             'update',
-            \App\Http\Requests\CategoryUpdateRequest::class
+            CategoryUpdateRequest::class
         );
     }
 
     #[Test]
-    public function update_behaves_as_expected(): void
+    public function update_modifies_category(): void
     {
-        $category = Category::factory()->create();
-        $name = fake()->name();
-        $user = Foreign::factory()->create();
-        $icon = fake()->word();
-
-        $response = $this->put(route('categories.update', $category), [
-            'name' => $name,
-            'user_id' => $user->id,
-            'icon' => $icon,
+        $user = User::factory()->create();
+        $category = Category::factory()->for($user)->create([
+            'name' => 'Groceries',
+            'icon' => 'cart',
         ]);
+
+        Sanctum::actingAs($user);
+
+        $payload = [
+            'name' => 'Travel',
+            'icon' => 'plane',
+        ];
+
+        $response = $this->putJson(route('categories.update', $category), $payload);
+
+        $response->assertOk();
 
         $category->refresh();
 
-        $response->assertOk();
-        $response->assertJsonStructure([]);
-
-        $this->assertEquals($name, $category->name);
-        $this->assertEquals($user->id, $category->user_id);
-        $this->assertEquals($icon, $category->icon);
+        $this->assertSame($payload['name'], $category->name);
+        $this->assertSame($payload['icon'], $category->icon);
     }
 
-
     #[Test]
-    public function destroy_deletes_and_responds_with(): void
+    public function destroy_soft_deletes_category(): void
     {
-        $category = Category::factory()->create();
+        $user = User::factory()->create();
+        $category = Category::factory()->for($user)->create();
 
-        $response = $this->delete(route('categories.destroy', $category));
+        Sanctum::actingAs($user);
+
+        $response = $this->deleteJson(route('categories.destroy', $category));
 
         $response->assertNoContent();
 
-        $this->assertSoftDeleted($category);
-    }
-
-
-    #[Test]
-    public function requests_behaves_as_expected(): void
-    {
-        $response = $this->get(route('categories.requests'));
-
-        $category->refresh();
-
-        $response->assertSessionHas('StoreCategoryRequest', $StoreCategoryRequest);
+        $this->assertSoftDeleted('categories', ['id' => $category->id]);
     }
 }

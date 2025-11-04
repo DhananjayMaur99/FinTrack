@@ -2,13 +2,15 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use App\Http\Requests\BudgetStoreRequest;
+use App\Http\Requests\BudgetUpdateRequest;
 use App\Models\Budget;
-use App\Models\Foreign;
-use App\Models\UpdateBudgetRequest;
+use App\Models\Category;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Support\Carbon;
 use JMac\Testing\Traits\AdditionalAssertions;
+use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -17,19 +19,30 @@ use Tests\TestCase;
  */
 final class BudgetControllerTest extends TestCase
 {
-    use AdditionalAssertions, RefreshDatabase, WithFaker;
+    use AdditionalAssertions;
+    use RefreshDatabase;
+    use WithFaker;
 
     #[Test]
-    public function index_behaves_as_expected(): void
+    public function index_returns_only_authenticated_users_budgets(): void
     {
-        $budgets = Budget::factory()->count(3)->create();
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
 
-        $response = $this->get(route('budgets.index'));
+        $ownedBudgets = Budget::factory()->count(2)->for($user)->create();
+        $foreignBudget = Budget::factory()->for($otherUser)->create();
+
+        Sanctum::actingAs($user);
+
+        $response = $this->getJson(route('budgets.index'));
 
         $response->assertOk();
-        $response->assertJsonStructure([]);
+        $response->assertJsonCount($ownedBudgets->count(), 'data');
+        foreach ($ownedBudgets as $budget) {
+            $response->assertJsonFragment(['id' => $budget->id]);
+        }
+        $response->assertJsonMissing(['id' => $foreignBudget->id]);
     }
-
 
     #[Test]
     public function store_uses_form_request_validation(): void
@@ -37,56 +50,82 @@ final class BudgetControllerTest extends TestCase
         $this->assertActionUsesFormRequest(
             \App\Http\Controllers\BudgetController::class,
             'store',
-            \App\Http\Requests\BudgetStoreRequest::class
+            BudgetStoreRequest::class
         );
     }
 
     #[Test]
-    public function store_saves(): void
+    public function store_creates_budget_for_authenticated_user(): void
     {
-        $user = Foreign::factory()->create();
-        $category = Foreign::factory()->create();
-        $limit = fake()->randomFloat(/** decimal_attributes **/);
-        $period = fake()->randomElement(/** enum_attributes **/);
-        $start_date = Carbon::parse(fake()->date());
-        $end_date = Carbon::parse(fake()->date());
+        $user = User::factory()->create();
+        $category = Category::factory()->for($user)->create();
 
-        $response = $this->post(route('budgets.store'), [
-            'user_id' => $user->id,
+        Sanctum::actingAs($user);
+
+        $payload = [
+            'limit' => 1500.50,
+            'period' => 'monthly',
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->addMonth()->toDateString(),
             'category_id' => $category->id,
-            'limit' => $limit,
-            'period' => $period,
-            'start_date' => $start_date->toDateString(),
-            'end_date' => $end_date->toDateString(),
-        ]);
+        ];
 
-        $budgets = Budget::query()
-            ->where('user_id', $user->id)
-            ->where('category_id', $category->id)
-            ->where('limit', $limit)
-            ->where('period', $period)
-            ->where('start_date', $start_date)
-            ->where('end_date', $end_date)
-            ->get();
-        $this->assertCount(1, $budgets);
-        $budget = $budgets->first();
+        $response = $this->postJson(route('budgets.store'), $payload);
 
         $response->assertCreated();
-        $response->assertJsonStructure([]);
-    }
+        $response->assertJsonFragment([
+            'limit' => number_format($payload['limit'], 2, '.', ''),
+            'period' => $payload['period'],
+            'category_id' => $category->id,
+        ]);
+        $response->assertJsonStructure([
+            'data' => [
+                'id',
+                'user_id',
+                'category_id',
+                'limit',
+                'period',
+                'start_date',
+                'end_date',
+                'progress_stats',
+            ],
+        ]);
 
+        $this->assertDatabaseHas('budgets', [
+            'user_id' => $user->id,
+            'category_id' => $category->id,
+            'limit' => number_format($payload['limit'], 2, '.', ''),
+            'period' => $payload['period'],
+        ]);
+    }
 
     #[Test]
-    public function show_behaves_as_expected(): void
+    public function show_returns_budget_with_progress_stats(): void
     {
-        $budget = Budget::factory()->create();
+        $user = User::factory()->create();
+        $budget = Budget::factory()->for($user)->create([
+            'limit' => 200,
+            'start_date' => now()->subWeek()->toDateString(),
+        ]);
 
-        $response = $this->get(route('budgets.show', $budget));
+        Sanctum::actingAs($user);
+
+        $response = $this->getJson(route('budgets.show', $budget));
 
         $response->assertOk();
-        $response->assertJsonStructure([]);
+        $response->assertJsonStructure([
+            'data' => [
+                'id',
+                'progress_stats' => [
+                    'limit',
+                    'spent',
+                    'remaining',
+                    'progress_percent',
+                    'is_over_budget',
+                ],
+            ],
+        ]);
     }
-
 
     #[Test]
     public function update_uses_form_request_validation(): void
@@ -94,64 +133,56 @@ final class BudgetControllerTest extends TestCase
         $this->assertActionUsesFormRequest(
             \App\Http\Controllers\BudgetController::class,
             'update',
-            \App\Http\Requests\BudgetUpdateRequest::class
+            BudgetUpdateRequest::class
         );
     }
 
     #[Test]
-    public function update_behaves_as_expected(): void
+    public function update_modifies_budget(): void
     {
-        $budget = Budget::factory()->create();
-        $user = Foreign::factory()->create();
-        $category = Foreign::factory()->create();
-        $limit = fake()->randomFloat(/** decimal_attributes **/);
-        $period = fake()->randomElement(/** enum_attributes **/);
-        $start_date = Carbon::parse(fake()->date());
-        $end_date = Carbon::parse(fake()->date());
-
-        $response = $this->put(route('budgets.update', $budget), [
-            'user_id' => $user->id,
-            'category_id' => $category->id,
-            'limit' => $limit,
-            'period' => $period,
-            'start_date' => $start_date->toDateString(),
-            'end_date' => $end_date->toDateString(),
+        $user = User::factory()->create();
+        $originalCategory = Category::factory()->for($user)->create();
+        $budget = Budget::factory()->for($user)->for($originalCategory)->create([
+            'limit' => 500,
+            'period' => 'monthly',
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->addMonth()->toDateString(),
         ]);
 
-        $budget->refresh();
+        $newCategory = Category::factory()->for($user)->create();
+
+        Sanctum::actingAs($user);
+
+        $payload = [
+            'limit' => 750,
+            'period' => 'yearly',
+            'end_date' => now()->addYear()->toDateString(),
+            'category_id' => $newCategory->id,
+        ];
+
+        $response = $this->putJson(route('budgets.update', $budget), $payload);
 
         $response->assertOk();
-        $response->assertJsonStructure([]);
-
-        $this->assertEquals($user->id, $budget->user_id);
-        $this->assertEquals($category->id, $budget->category_id);
-        $this->assertEquals($limit, $budget->limit);
-        $this->assertEquals($period, $budget->period);
-        $this->assertEquals($start_date, $budget->start_date);
-        $this->assertEquals($end_date, $budget->end_date);
-    }
-
-
-    #[Test]
-    public function destroy_deletes_and_responds_with(): void
-    {
-        $budget = Budget::factory()->create();
-
-        $response = $this->delete(route('budgets.destroy', $budget));
-
-        $response->assertNoContent();
-
-        $this->assertModelMissing($budget);
-    }
-
-
-    #[Test]
-    public function requests_behaves_as_expected(): void
-    {
-        $response = $this->get(route('budgets.requests'));
 
         $budget->refresh();
 
-        $response->assertSessionHas('StoreBudgetRequest', $StoreBudgetRequest);
+        $this->assertSame('750.00', $budget->limit);
+        $this->assertSame('yearly', $budget->period);
+        $this->assertSame($payload['category_id'], $budget->category_id);
+        $this->assertSame($payload['end_date'], $budget->end_date?->toDateString());
+    }
+
+    #[Test]
+    public function destroy_deletes_budget(): void
+    {
+        $user = User::factory()->create();
+        $budget = Budget::factory()->for($user)->create();
+
+        Sanctum::actingAs($user);
+
+        $response = $this->deleteJson(route('budgets.destroy', $budget));
+
+        $response->assertNoContent();
+        $this->assertDatabaseMissing('budgets', ['id' => $budget->id]);
     }
 }
