@@ -2,51 +2,66 @@
 models:
   User:
     name: string
-    email: string:unique
+    email: string unique
     password: string
     timestamps: true
-    softdeletes: true
+    softDeletes: true
+    relationships:
+      hasMany: Category, Transaction, Budget
 
   Category:
     name: string
-    user_id: id:foreign
-    icon: string:nullable
-    softdeletes: true
+    user_id: id foreign
+    icon: string nullable
     timestamps: true
+    softDeletes: true
+    relationships:
+      belongsTo: User
+      hasMany: Transaction, Budget
 
   Transaction:
-    user_id: id:foreign
-    category_id: id:foreign:nullable
+    user_id: id foreign
+    category_id: id foreign nullable
     amount: decimal:10,2
-    description: string:nullable
+    description: text nullable
     date: date
-    softdeletes: true
     timestamps: true
+    softDeletes: true
+    relationships:
+      belongsTo: User, Category
 
   Budget:
-    user_id: id:foreign
-    category_id: id:foreign:nullable:onDelete(cascade)
+    user_id: id foreign
+    category_id: id foreign nullable onDelete:cascade
     limit: decimal:10,2
-    period: enum:'monthly','yearly'
+    period: enum:monthly,yearly
     start_date: date
-    end_date: date:nullable
+    end_date: date nullable
     timestamps: true
+    relationships:
+      belongsTo: User, Category
 
 controllers:
+  Auth:
+    resource: api
+    requests:
+      register: RegisterUserRequest
+      login: LoginUserRequest
+
   Category:
-    resource: api # Changed from 'true'
+    resource: api
     requests:
       store: StoreCategoryRequest
       update: UpdateCategoryRequest
 
   Transaction:
-    resource: api # Changed from 'true'
+    resource: api
     requests:
       store: StoreTransactionRequest
       update: UpdateTransactionRequest
 
   Budget:
-    resource: api # Changed from 'true'
+    resource: api
     requests:
       store: StoreBudgetRequest
       update: UpdateBudgetRequest
