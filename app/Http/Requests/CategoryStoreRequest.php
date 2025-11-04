@@ -11,18 +11,25 @@ class CategoryStoreRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        // We handle authorization in the controller with Policies.
+        // We can just return true here.
         return true;
     }
 
     /**
      * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
+        // THE FIX:
+        // We ONLY validate fields we expect from the user.
+        // We REMOVED the 'user_id' rule, because we set that
+        // securely in the controller.
         return [
-            'name' => ['required', 'string'],
-            'user_id' => ['required', 'integer', 'exists:foreigns,id'],
-            'icon' => ['required', 'string', 'max:nullable'],
+            'name' => ['required', 'string', 'max:255'],
+            'icon' => ['string', 'nullable'],
         ];
     }
 }
