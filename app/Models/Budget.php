@@ -5,16 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
+// We have intentionally REMOVED 'SoftDeletes' from this model
+// because the migration does not support it. This fixes the
+// "Unknown column 'deleted_at'" error.
 
 class Budget extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory; // <-- Note: SoftDeletes has been removed.
 
     /**
      * The attributes that are mass assignable.
-     *
-     * @var array
+     * This is critical for our update() method to work.
      */
     protected $fillable = [
         'user_id',
@@ -26,9 +28,7 @@ class Budget extends Model
     ];
 
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * The attributes that should be cast.
      */
     protected $casts = [
         'limit' => 'decimal:2',
@@ -36,13 +36,19 @@ class Budget extends Model
         'end_date' => 'date',
     ];
 
+    /**
+     * Get the user that owns the budget.
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Get the category that this budget applies to.
+     */
     public function category(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Category::class);
+        return $this->belongsTo(Category::class);
     }
 }

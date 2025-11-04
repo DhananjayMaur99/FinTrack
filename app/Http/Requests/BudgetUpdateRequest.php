@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests; // <-- 1. Fixed namespace
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
+// 2. Fixed class name to match the file
 class BudgetUpdateRequest extends FormRequest
 {
     /**
@@ -11,21 +13,30 @@ class BudgetUpdateRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        // The BudgetPolicy will authorize the actual request.
         return true;
     }
 
     /**
      * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
+        // 3. Fixed rules to use 'sometimes' for updating
         return [
-            'user_id' => ['required', 'integer', 'exists:foreigns,id'],
-            'category_id' => ['required', 'integer', 'exists:foreigns,id'],
-            'limit' => ['required', 'numeric', 'between:-99999999.99,99999999.99'],
-            'period' => ['required', "in:'monthly','yearly'"],
-            'start_date' => ['required', 'date'],
-            'end_date' => ['required', 'date'],
+            'limit' => ['sometimes', 'numeric', 'min:0.01'],
+            'period' => ['sometimes', Rule::in(['monthly', 'yearly'])],
+            'start_date' => ['sometimes', 'date'],
+            'end_date' => ['sometimes', 'nullable', 'date', 'after_or_equal:start_date'],
+
+            // Secure validation: Category must exist AND belong to the user
+            'category_id' => [
+                'sometimes',
+                'nullable',
+                Rule::exists('categories', 'id')->where('user_id', $this->user()->id),
+            ],
         ];
     }
 }
