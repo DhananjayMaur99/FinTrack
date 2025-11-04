@@ -2,24 +2,28 @@
 
 namespace Database\Seeders;
 
+use App\Models\Budget;
+use App\Models\Category;
+use App\Models\Transaction;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
-    public function run(): void
+    public function run()
     {
-        // User::factory(10)->create();
+        // Ensure test user exists (idempotent)
+        $user = User::updateOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'name' => 'Test User',
+                'password' => bcrypt('password'),
+            ]
+        );
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // seed categories/transactions/budgets using the ensured user
+        Category::factory()->count(5)->for($user)->create();
+        Transaction::factory()->count(20)->for($user)->create();
+        Budget::factory()->count(3)->for($user)->create();
     }
 }

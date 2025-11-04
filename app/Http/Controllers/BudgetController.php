@@ -7,7 +7,6 @@ use App\Http\Requests\BudgetUpdateRequest;
 use App\Http\Resources\BudgetCollection;
 use App\Http\Resources\BudgetResource;
 use App\Models\Budget;
-use App\Models\UpdateBudgetRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 

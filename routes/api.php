@@ -1,33 +1,30 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\TransactionController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
 
-Route::get('categories/requests', [App\Http\Controllers\CategoryController::class, 'requests']);
-Route::apiResource('categories', App\Http\Controllers\CategoryController::class);
+// --- Protected Routes ---
+// These routes are protected by Sanctum.
+// A user MUST send a valid Bearer Token to access them.
+Route::middleware('auth:sanctum')->group(function () {
 
-Route::get('transactions/requests', [App\Http\Controllers\TransactionController::class, 'requests']);
-Route::apiResource('transactions', App\Http\Controllers\TransactionController::class);
+    // Auth
+    Route::post('/logout', [AuthController::class, 'logout']);
 
-Route::get('budgets/requests', [App\Http\Controllers\BudgetController::class, 'requests']);
-Route::apiResource('budgets', App\Http\Controllers\BudgetController::class);
+    // Our existing resource routes
+    Route::apiResource('categories', CategoryController::class);
+    Route::apiResource('transactions', TransactionController::class);
+    Route::apiResource('budgets', BudgetController::class);
 
-
-Route::get('categories/requests', [App\Http\Controllers\CategoryController::class, 'requests']);
-Route::apiResource('categories', App\Http\Controllers\CategoryController::class);
-
-Route::get('transactions/requests', [App\Http\Controllers\TransactionController::class, 'requests']);
-Route::apiResource('transactions', App\Http\Controllers\TransactionController::class);
-
-Route::get('budgets/requests', [App\Http\Controllers\BudgetController::class, 'requests']);
-Route::apiResource('budgets', App\Http\Controllers\BudgetController::class);
-
-
-Route::get('categories/requests', [App\Http\Controllers\CategoryController::class, 'requests']);
-Route::apiResource('categories', App\Http\Controllers\CategoryController::class);
-
-Route::get('transactions/requests', [App\Http\Controllers\TransactionController::class, 'requests']);
-Route::apiResource('transactions', App\Http\Controllers\TransactionController::class);
-
-Route::get('budgets/requests', [App\Http\Controllers\BudgetController::class, 'requests']);
-Route::apiResource('budgets', App\Http\Controllers\BudgetController::class);
+    // Get the currently logged in user
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+});

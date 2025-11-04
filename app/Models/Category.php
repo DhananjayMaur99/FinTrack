@@ -4,23 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Category extends Model
 {
     use HasFactory, SoftDeletes;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'name',
-        'user_id',
-        'icon',
-    ];
+    protected $fillable = ['user_id', 'name', 'icon'];
 
     /**
      * Get the attributes that should be cast.
@@ -35,8 +25,13 @@ class Category extends Model
         ];
     }
 
-    public function user(): BelongsTo
+    public function user()
     {
-        return $this->belongsTo(Foreign::class);
+        return $this->belongsTo(User::class);
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
     }
 }
