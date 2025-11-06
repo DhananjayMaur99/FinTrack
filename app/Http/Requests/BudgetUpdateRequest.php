@@ -31,11 +31,13 @@ class BudgetUpdateRequest extends FormRequest
             'start_date' => ['sometimes', 'date'],
             'end_date' => ['sometimes', 'nullable', 'date', 'after_or_equal:start_date'],
 
-            // Secure validation: Category must exist AND belong to the user
+            // Secure validation: Category must exist AND belong to the user AND not be deleted
             'category_id' => [
                 'sometimes',
                 'nullable',
-                Rule::exists('categories', 'id')->where('user_id', $this->user()->id),
+                Rule::exists('categories', 'id')
+                    ->where('user_id', $this->user()->id)
+                    ->whereNull('deleted_at'),
             ],
         ];
     }

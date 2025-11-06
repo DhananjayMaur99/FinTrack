@@ -32,10 +32,13 @@ class TransactionUpdateRequest extends FormRequest
             'description' => ['sometimes', 'nullable', 'string'],
 
             // THIS IS THE FIX:
+            // Prevent updating to a soft-deleted category
             'category_id' => [
                 'sometimes',
                 'nullable',
-                Rule::exists('categories', 'id')->where('user_id', $this->user()->id),
+                Rule::exists('categories', 'id')
+                    ->where('user_id', $this->user()->id)
+                    ->whereNull('deleted_at'),
             ],
         ];
     }

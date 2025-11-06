@@ -16,7 +16,7 @@ class BudgetFactory extends Factory
         return [
             'user_id' => User::factory(),
             'category_id' => Category::factory(),
-            'limit' => $this->faker->randomFloat(2, 0, 99999999.99),
+            'limit' => $this->faker->randomFloat(2, 100, 50000), // Reasonable budgets: $100 to $50,000
             'period' => $this->faker->randomElement(['monthly', 'yearly']),
             'start_date' => $this->faker->date(),
         ];

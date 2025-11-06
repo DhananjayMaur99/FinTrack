@@ -38,11 +38,20 @@ class BudgetResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // Load category (budget.category_id can be NULL for "overall" budgets)
+        $category = $this->category;
+
         // 1. Get the base budget data
         $data = [
             'id' => $this->id,
             'user_id' => $this->user_id,
+            'category' => $category ? [
+                'id' => $category->id,
+                'name' => $category->name,
+                'icon' => $category->icon,
+            ] : null,
             'category_id' => $this->category_id,
+            'category_name' => $category?->name ?? 'Overall Budget',
             'limit' => $this->limit,
             'period' => $this->period,
             'start_date' => $this->start_date,

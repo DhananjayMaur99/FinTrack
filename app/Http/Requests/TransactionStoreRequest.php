@@ -38,10 +38,13 @@ class TransactionStoreRequest extends FormRequest
             // THIS IS THE FIX:
             // It must be nullable, AND
             // It must exist in the 'categories' table, AND
-            // It must belong to the currently logged-in user.
+            // It must belong to the currently logged-in user, AND
+            // It must NOT be soft-deleted (to prevent using deleted categories in new transactions)
             'category_id' => [
                 'nullable',
-                Rule::exists('categories', 'id')->where('user_id', $this->user()->id),
+                Rule::exists('categories', 'id')
+                    ->where('user_id', $this->user()->id)
+                    ->whereNull('deleted_at'),
             ],
         ];
     }

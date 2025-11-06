@@ -30,10 +30,12 @@ class BudgetStoreRequest extends FormRequest
             'start_date' => ['required', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
 
-            // Secure validation: Category must exist AND belong to the user
+            // Secure validation: Category must exist AND belong to the user AND not be deleted
             'category_id' => [
                 'nullable',
-                Rule::exists('categories', 'id')->where('user_id', $this->user()->id),
+                Rule::exists('categories', 'id')
+                    ->where('user_id', $this->user()->id)
+                    ->whereNull('deleted_at'),
             ],
         ];
     }
