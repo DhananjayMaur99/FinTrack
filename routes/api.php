@@ -17,6 +17,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
+    // Delete account (soft delete)
+    Route::delete('/user', [AuthController::class, 'destroy']);
 
     // Our existing resource routes
     Route::apiResource('categories', CategoryController::class);

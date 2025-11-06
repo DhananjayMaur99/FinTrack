@@ -82,4 +82,30 @@ class AuthController extends Controller
             'message' => 'Logged out successfully',
         ], 200);
     }
+
+    /**
+     * Soft-delete the authenticated user and revoke their tokens.
+     */
+    public function destroy(Request $request)
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        // Revoke all tokens for this user (Sanctum)
+        if (method_exists($user, 'tokens')) {
+            $user->tokens()->delete();
+        }
+
+        // Soft delete the user. This will keep records for historical integrity.
+        // If a permanent delete is desired, a separate admin/confirm flow should
+        // call forceDelete().
+        $user->delete();
+
+        return response()->json([
+            'message' => 'Account deleted successfully',
+        ], 200);
+    }
 }
