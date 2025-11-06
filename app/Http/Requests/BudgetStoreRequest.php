@@ -36,7 +36,6 @@ class BudgetStoreRequest extends FormRequest
                 Rule::exists('categories', 'id')
                     ->where('user_id', $this->user()->id)
                     ->whereNull('deleted_at'),
-            ],
-        ];
+            ],       ];
     }
 }
