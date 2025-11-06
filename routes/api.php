@@ -20,13 +20,16 @@ Route::middleware('auth:sanctum')->group(function () {
     // Delete account (soft delete)
     Route::delete('/user', [AuthController::class, 'destroy']);
 
+    // get
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+
     // Our existing resource routes
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('transactions', TransactionController::class);
     Route::apiResource('budgets', BudgetController::class);
 
     // Get the currently logged in user
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
+
 });
