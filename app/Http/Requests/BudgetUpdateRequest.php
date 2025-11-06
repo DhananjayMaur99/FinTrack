@@ -13,7 +13,7 @@ class BudgetUpdateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // The BudgetPolicy will authorize the actual request.
+        // The BudgetPolicy authorizes the req
         return true;
     }
 

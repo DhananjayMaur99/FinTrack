@@ -23,7 +23,7 @@ class BudgetStoreRequest extends FormRequest
      */
     public function rules(): array
     {
-        // Use 'required' for creating a new budget
+
         return [
             'limit' => ['required', 'numeric', 'min:0.01'],
             'period' => ['required', Rule::in(['monthly', 'yearly'])],
