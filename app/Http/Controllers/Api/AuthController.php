@@ -66,8 +66,7 @@ class AuthController extends Controller
             ], 401); // 401 Unauthorized
         }
 
-        // If authentication is successful, revoke any old tokens
-        $user->tokens()->delete();
+        $user->tokens()->get()->each->delete();
 
         // Create a new token - 1 hour expiry
         $issued = $this->issueToken($user);

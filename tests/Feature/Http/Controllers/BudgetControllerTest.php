@@ -1,4 +1,5 @@
 <?php
+
 namespace Tests\Feature\Http\Controllers;
 
 use App\Http\Requests\BudgetStoreRequest;
@@ -72,21 +73,24 @@ final class BudgetControllerTest extends TestCase
         $response = $this->postJson(route('budgets.store'), $payload);
 
         $response->assertCreated();
+        // Check a few key attributes and ensure the new resource shape is present
         $response->assertJsonFragment([
-            'limit' => number_format($payload['limit'], 2, '.', ''),
             'period' => $payload['period'],
-            'category_id' => $category->id,
         ]);
+        // The API now returns a nested `category` object; assert its id via json path
+        $response->assertJsonPath('data.category.id', $category->id);
         $response->assertJsonStructure([
             'data' => [
                 'id',
                 'user_id',
-                'category_id',
+                'category',
                 'limit',
                 'period',
-                'start_date',
-                'end_date',
-                'progress_stats',
+                'range' => [
+                    'start',
+                    'end',
+                ],
+                'stats',
             ],
         ]);
 
@@ -115,12 +119,11 @@ final class BudgetControllerTest extends TestCase
         $response->assertJsonStructure([
             'data' => [
                 'id',
-                'progress_stats' => [
-                    'limit',
+                'stats' => [
                     'spent',
                     'remaining',
                     'progress_percent',
-                    'is_over_budget',
+                    'over',
                 ],
             ],
         ]);
@@ -165,7 +168,7 @@ final class BudgetControllerTest extends TestCase
 
         $budget->refresh();
 
-        $this->assertSame('750.00', $budget->limit);
+        $this->assertEquals(750.0, $budget->limit);
         $this->assertSame('yearly', $budget->period);
         $this->assertSame($payload['category_id'], $budget->category_id);
         $this->assertSame($payload['end_date'], $budget->end_date?->toDateString());
