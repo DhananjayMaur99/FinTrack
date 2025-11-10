@@ -1,5 +1,4 @@
 <?php
-
 namespace Tests\Feature\Http\Controllers;
 
 use App\Http\Requests\BudgetStoreRequest;

@@ -12,9 +12,7 @@ class CategoryPolicy
      */
     public function viewAny(User $user): bool
     {
-        // This is a simple rule: if you are a logged-in user,
-        // you are allowed to view your *own* list of categories.
-        // The controller's `index()` method handles the filtering.
+
         return true;
     }
 

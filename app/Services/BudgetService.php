@@ -3,79 +3,100 @@
 namespace App\Services;
 
 use App\Models\Budget;
-use App\Models\Transaction;
 use App\Models\User;
-use Illuminate\Support\Carbon;
+use App\Models\Transaction; // ensure this exists
 
-/**
- * Service class for handling complex budget-related logic.
- * Follows the rule: "All business logic MUST go in app/Services".
- */
 class BudgetService
 {
+    /**
+     * Create a budget for a user.
+     *
+     * @param  User  $user
+     * @param  array  $payload
+     * @return Budget
+     */
     public function createBudgetForUser(User $user, array $payload): Budget
     {
         $budget = $user->budgets()->create($payload);
-
         return $budget->refresh();
     }
 
+    /**
+     * Update a budget.
+     *
+     * @param  Budget  $budget
+     * @param  array  $payload
+     * @return Budget
+     */
     public function updateBudget(Budget $budget, array $payload): Budget
     {
-        $budget->fill($payload);
-        $budget->save();
-
+        $budget->fill($payload)->save();
         return $budget->refresh();
     }
 
+    /**
+     * Delete a budget.
+     *
+     * @param  Budget  $budget
+     * @return void
+     */
     public function deleteBudget(Budget $budget): void
     {
         $budget->delete();
     }
 
     /**
-     * Calculate the progress and spending for a given budget.
+     * Compute spent amount within the budget's date range and category.
      *
-     * @param  Budget  $budget  The budget to calculate progress for.
+     * @param  Budget  $budget
+     * @return float
+     */
+    protected function calculateSpentForRange(Budget $budget): float
+    {
+        $user = $budget->user; // assumes Budget belongsTo User
+        if (! $user) {
+            return 0.0;
+        }
+
+        $query = Transaction::query()
+            ->where('user_id', $user->id)
+            ->where('category_id', $budget->category_id);
+
+        // Use local date field; adjust if your column differs.
+        if ($budget->start_date) {
+            $query->whereDate('date_local', '>=', $budget->start_date->toDateString());
+        }
+        if ($budget->end_date) {
+            $query->whereDate('date_local', '<=', $budget->end_date->toDateString());
+        }
+
+        return (float) $query->sum('amount');
+    }
+
+    /**
+     * Calculate progress stats for a budget.
+     *
      * @return array{
-     * limit: float,
-     * spent: float,
-     * remaining: float,
-     * progress_percent: float,
-     * is_over_budget: bool
+     *   limit: float,
+     *   spent: float,
+     *   remaining: float,
+     *   progress_percent: float,
+     *   is_over_budget: bool
      * }
      */
     public function getBudgetProgress(Budget $budget): array
     {
-        $startDate = $budget->start_date;
-        $endDate = $budget->end_date ?? Carbon::now();
-
-        // Start building the query to get all relevant transactions
-        $transactionsQuery = Transaction::query()
-            ->where('user_id', $budget->user_id)
-            ->whereBetween('date', [$startDate, $endDate]);
-
-        // If this budget is for a specific category, filter by it.
-        // If category_id is null, it's a "total spending" budget,
-        // so we don't filter by category.
-        if ($budget->category_id) {
-            $transactionsQuery->where('category_id', $budget->category_id);
-        }
-
-        // Sum the amount and cast to float
-        $spent = (float) $transactionsQuery->sum('amount');
         $limit = (float) $budget->limit;
-
-        // Calculate statistics
-        $remaining = $limit - $spent;
-        $progressPercent = ($limit > 0) ? ($spent / $limit) * 100 : 0;
+        $spent = $this->calculateSpentForRange($budget);
+        $remaining = max(0, $limit - $spent);
+        $percent = $limit > 0 ? round(($spent / $limit) * 100, 2) : 0;
 
         return [
-            'limit' => $limit,
-            'spent' => $spent,
-            'remaining' => $remaining,
-            'progress_percent' => round($progressPercent, 2), // Round to 2 decimal places
-            'is_over_budget' => $spent > $limit,
+            'limit'            => $limit,
+            'spent'            => $spent,
+            'remaining'        => $remaining,
+            'progress_percent' => $percent,
+            'is_over_budget'   => $spent > $limit,
         ];
     }
 }

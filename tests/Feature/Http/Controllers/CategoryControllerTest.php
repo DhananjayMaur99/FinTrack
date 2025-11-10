@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * Developer notes:
+ * - Routes: expects named routes categories.index|store|show|update|destroy.
+ * - Auth: Sanctum::actingAs enforces per-user scoping; cross-user data must not appear.
+ * - Validation: asserts controller uses CategoryStoreRequest/CategoryUpdateRequest.
+ * - Soft deletes: destroy should soft-delete categories (kept for historical relations).
+ */
+
 namespace Tests\Feature\Http\Controllers;
 
 use App\Http\Requests\CategoryStoreRequest;

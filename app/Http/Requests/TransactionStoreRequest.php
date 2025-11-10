@@ -25,21 +25,10 @@ class TransactionStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // 'amount' is required, must be a number, and must be at least 1 cent.
             'amount' => ['required', 'numeric', 'min:0.01'],
-
-            // 'date' is required and must be a valid date format.
-            'date' => ['required', 'date'],
-
-            // 'description' is optional.
+            // date is now optional; we will default it if absent
+            'date' => ['sometimes', 'date'],
             'description' => ['nullable', 'string'],
-
-            // 'category_id' is optional.
-            // THIS IS THE FIX:
-            // It must be nullable, AND
-            // It must exist in the 'categories' table, AND
-            // It must belong to the currently logged-in user, AND
-            // It must NOT be soft-deleted (to prevent using deleted categories in new transactions)
             'category_id' => [
                 'nullable',
                 Rule::exists('categories', 'id')
@@ -47,5 +36,27 @@ class TransactionStoreRequest extends FormRequest
                     ->whereNull('deleted_at'),
             ],
         ];
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $tz = $this->user()?->timezone
+            ?: $this->header('X-Timezone')
+            ?: config('app.timezone', 'UTC');
+
+        // Default local date if not provided
+        if (! $this->has('date') || empty($this->input('date'))) {
+            $this->merge([
+                'date' => now($tz)->toDateString(),
+            ]);
+        }
+
+        // Always include UTC precise timestamp for ordering (not validated rule; optional internal use)
+        $this->merge([
+            'occurred_at_utc' => now('UTC')->toDateTimeString(),
+        ]);
     }
 }

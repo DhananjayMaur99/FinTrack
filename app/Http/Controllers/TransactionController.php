@@ -37,7 +37,13 @@ class TransactionController extends Controller
         $user = $request->user();
 
         // Create the transaction using the relationship to auto-set user_id
-        $transaction = $user->transactions()->create($request->validated());
+        $payload = $request->validated();
+        // Persist both legacy 'date' (used by BudgetService) and new 'date_local'
+        if (! isset($payload['date_local']) && isset($payload['date'])) {
+            $payload['date_local'] = $payload['date'];
+        }
+        // occurred_at_utc is merged in prepareForValidation
+        $transaction = $user->transactions()->create($payload);
 
         return new TransactionResource($transaction);
     }
@@ -62,7 +68,11 @@ class TransactionController extends Controller
     {
         $this->authorize('update', $transaction);
 
-        $transaction->update($request->validated());
+        $payload = $request->validated();
+        if (array_key_exists('date', $payload)) {
+            $payload['date_local'] = $payload['date'];
+        }
+        $transaction->update($payload);
 
         return new TransactionResource($transaction->refresh());
     }

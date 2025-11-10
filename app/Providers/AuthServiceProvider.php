@@ -18,7 +18,6 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        // 2. ADD THIS MAPPING
         Category::class => CategoryPolicy::class,
         Transaction::class => TransactionPolicy::class,
         Budget::class => BudgetPolicy::class,

@@ -15,7 +15,7 @@ class CategoryFactory extends Factory
         return [
             'user_id' => User::factory(),
             'name' => $this->faker->word(),
-            // make icon optional; adjust pattern/length as needed
+            // icon is optional
             'icon' => $this->faker->optional()->regexify('[A-Za-z0-9]{8}'),
         ];
     }

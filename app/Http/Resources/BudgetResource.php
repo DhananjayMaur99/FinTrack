@@ -3,65 +3,51 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource; // Note: Corrected typo from JsonJsonResource
+use Illuminate\Http\Resources\Json\JsonResource;
 
 class BudgetResource extends JsonResource
 {
-    /**
-     * Our custom stats, passed from the controller.
-     *
-     * @var array|null
-     */
     protected $progressStats;
 
-    /**
-     * Create a new resource instance.
-     * (THIS IS THE FIX - This constructor accepts the 2nd argument)
-     *
-     * @param  mixed  $resource
-     * @param  array|null  $progressStats
-     * @return void
-     */
     public function __construct($resource, $progressStats = null)
     {
-        // Call the parent constructor
         parent::__construct($resource);
-
-        // Store our custom stats
         $this->progressStats = $progressStats;
     }
 
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
-        // Load category (budget.category_id can be NULL for "overall" budgets)
         $category = $this->category;
 
-        // 1. Get the base budget data
         $data = [
-            'id' => $this->id,
+            'id'      => $this->id,
             'user_id' => $this->user_id,
             'category' => $category ? [
-                'id' => $category->id,
+                'id'   => $category->id,
                 'name' => $category->name,
                 'icon' => $category->icon,
             ] : null,
-            'category_id' => $this->category_id,
-            'category_name' => $category?->name ?? 'Overall Budget',
-            'limit' => $this->limit,
+            'limit'  => (float) $this->limit,
             'period' => $this->period,
-            'start_date' => $this->start_date,
-            'end_date' => $this->end_date,
+            'range'  => [
+                'start' => optional($this->start_date)->format('Y-m-d'),
+                'end'   => optional($this->end_date)->format('Y-m-d'),
+            ],
         ];
 
-        // 2. (THE FIX)
-        // If our constructor received stats, merge them.
-        if ($this->progressStats !== null) {
-            $data['progress_stats'] = $this->progressStats;
+        if (is_array($this->progressStats)) {
+            $limit     = (float) ($this->progressStats['limit'] ?? $this->limit);
+            $spent     = (float) ($this->progressStats['spent'] ?? 0);
+            $remaining = (float) ($this->progressStats['remaining'] ?? max(0, $limit - $spent));
+            $progress  = (float) ($this->progressStats['progress_percent'] ?? ($limit > 0 ? round(($spent / $limit) * 100, 2) : 0));
+            $over      = (bool) ($this->progressStats['is_over_budget'] ?? ($spent > $limit));
+
+            $data['stats'] = [
+                'spent'            => $spent,
+                'remaining'        => $remaining,
+                'progress_percent' => $progress,
+                'over'             => $over,
+            ];
         }
 
         return $data;

@@ -3,39 +3,50 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Carbon;
 
 class BudgetStoreRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        // The BudgetPolicy will authorize the actual request.
-        return true;
+        return $this->user() !== null;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
-
         return [
-            'limit' => ['required', 'numeric', 'min:0.01'],
-            'period' => ['required', Rule::in(['monthly', 'yearly'])],
-            'start_date' => ['required', 'date'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'category_id' => ['required', 'integer', 'exists:categories,id'],
+            'limit'       => ['required_without:amount', 'numeric', 'min:0'],
+            'amount'      => ['sometimes', 'numeric', 'min:0'], // alias for limit
+            'period'      => ['required', 'in:weekly,monthly,yearly'],
+            'start_date'  => ['required', 'date'],
+            'end_date'    => ['nullable', 'date', 'after_or_equal:start_date'],
+        ];
+    }
 
-            // Secure validation: Category must exist AND belong to the user AND not be deleted
-            'category_id' => [
-                'nullable',
-                Rule::exists('categories', 'id')
-                    ->where('user_id', $this->user()->id)
-                    ->whereNull('deleted_at'),
-            ],       ];
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('amount') && !$this->has('limit')) {
+            $this->merge(['limit' => $this->input('amount')]);
+        }
+
+        if (!$this->filled('end_date') && $this->filled('start_date')) {
+            $this->merge([
+                'end_date' => $this->computeEndDate(
+                    $this->input('start_date'),
+                    $this->input('period', 'monthly')
+                ),
+            ]);
+        }
+    }
+
+    private function computeEndDate(string $start, string $period): string
+    {
+        $startC = Carbon::parse($start)->startOfDay();
+        return match ($period) {
+            'weekly'  => $startC->copy()->addWeek()->subDay()->toDateString(),
+            'yearly'  => $startC->copy()->addYear()->subDay()->toDateString(),
+            default   => $startC->copy()->addMonth()->subDay()->toDateString(), // monthly
+        };
     }
 }

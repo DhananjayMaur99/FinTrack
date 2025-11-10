@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * Developer notes:
+ * - Routes: expects named routes transactions.index|store|show|update|destroy.
+ * - Auth: Sanctum::actingAs($user) scopes requests to the authenticated user.
+ * - Validation: AdditionalAssertions::assertActionUsesFormRequest ensures controller methods use form requests.
+ * - Amounts: stored/serialized as string decimals; tests use number_format(..., 2) for consistent assertions.
+ * - Ownership: factories use ->for($user) to enforce multi-tenant isolation (no cross-user leakage).
+ */
+
 namespace Tests\Feature\Http\Controllers;
 
 use App\Http\Requests\TransactionStoreRequest;

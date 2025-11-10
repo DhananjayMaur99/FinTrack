@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
-// This is the class we must extend for authentication
+
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes; // <-- 1. Import SoftDeletes
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-// This class MUST extend "Authenticatable"
+
 /**
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Category[] $categories
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Transaction[] $transactions
@@ -30,6 +31,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'timezone',
     ];
 
     /**
@@ -49,14 +51,13 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed', // <-- 3. This auto-hashes new passwords
+        'password' => 'hashed',
     ];
 
-    // --- 4. ADD ALL THE RELATIONSHIPS ---
-
     /**
-     * Get the categories for the user.
+     * Get the categories for this user.
      */
+
     public function categories(): HasMany
     {
         return $this->hasMany(Category::class);

@@ -28,7 +28,7 @@ class TransactionUpdateRequest extends FormRequest
         // This is perfect for PATCH updates.
         return [
             'amount' => ['sometimes', 'numeric', 'min:0.01'],
-            'date' => ['sometimes', 'date'],
+            'date' => ['sometimes', 'date'], // local date can be adjusted
             'description' => ['sometimes', 'nullable', 'string'],
 
             // THIS IS THE FIX:
@@ -41,5 +41,17 @@ class TransactionUpdateRequest extends FormRequest
                     ->whereNull('deleted_at'),
             ],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        // If client sends no date in an update we do not auto-fill (avoid overwriting existing value).
+        // However, if explicitly wanting to "reset" date to today, they can send a flag or the new date.
+        // We still attach a fresh occurred_at_utc if date is being changed for audit trail.
+        if ($this->has('date')) {
+            $this->merge([
+                'occurred_at_utc' => now('UTC')->toDateTimeString(),
+            ]);
+        }
     }
 }

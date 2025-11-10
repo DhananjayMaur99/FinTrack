@@ -8,9 +8,25 @@ use App\Http\Requests\RegisterUserRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\TransientToken;
+use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
+    /**
+     * Issue a Sanctum token with configured TTL.
+     */
+    protected function issueToken(User $user): array
+    {
+        $ttlMinutes = config('token.ttl_minutes', 60);
+        $expiresAt = now()->addMinutes($ttlMinutes);
+        $token = $user->createToken('api-token', ['*'], $expiresAt);
+        return [
+            'plain' => $token->plainTextToken,
+            'expires_at' => $expiresAt,
+            'expires_in' => $ttlMinutes * 60,
+        ];
+    }
     // Register a new user and return a token
     public function register(RegisterUserRequest $request)
     {
@@ -23,17 +39,14 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        // create a token for new user
-
-        $token = $user->createToken('api-token');
-
-        // Return User and Token
-
+        // create a token for new user - 1 hour expiry
+        $issued = $this->issueToken($user);
         return response()->json([
             'user' => $user,
-            'token' => $token->plainTextToken,
+            'token' => $issued['plain'],
+            'expires_at' => $issued['expires_at']->toIso8601String(),
+            'expires_in' => $issued['expires_in'],
         ], 201);
-
     }
 
     /**
@@ -56,12 +69,13 @@ class AuthController extends Controller
         // If authentication is successful, revoke any old tokens
         $user->tokens()->delete();
 
-        // Create a new token
-        $token = $user->createToken('api-token');
-
+        // Create a new token - 1 hour expiry
+        $issued = $this->issueToken($user);
         return response()->json([
             'user' => $user,
-            'token' => $token->plainTextToken,
+            'token' => $issued['plain'],
+            'expires_at' => $issued['expires_at']->toIso8601String(),
+            'expires_in' => $issued['expires_in'],
         ]);
     }
 
@@ -100,12 +114,26 @@ class AuthController extends Controller
         }
 
         // Soft delete the user. This will keep records for historical integrity.
-        // If a permanent delete is desired, a separate admin/confirm flow should
-        // call forceDelete().
+
         $user->delete();
 
         return response()->json([
             'message' => 'Account deleted successfully',
         ], 200);
+    }
+
+    public function refresh(Request $request): JsonResponse
+    {
+        $current = $request->user()->currentAccessToken();
+        if ($current && !($current instanceof TransientToken)) {
+            $current->delete();
+        }
+
+        $issued = $this->issueToken($request->user());
+        return response()->json([
+            'token' => $issued['plain'],
+            'expires_at' => $issued['expires_at']->toIso8601String(),
+            'expires_in' => $issued['expires_in'],
+        ]);
     }
 }
