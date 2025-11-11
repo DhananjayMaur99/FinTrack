@@ -52,7 +52,7 @@ class BudgetStoreRequest extends FormRequest
         return match ($period) {
             'weekly'  => $startC->copy()->addWeek()->subDay()->toDateString(),
             'yearly'  => $startC->copy()->addYear()->subDay()->toDateString(),
-            default   => $startC->copy()->addMonth()->subDay()->toDateString(), // monthly
+            default   => $startC->copy()->addMonth()->subDay()->toDateString(), //default = monthly
         };
     }
 }
