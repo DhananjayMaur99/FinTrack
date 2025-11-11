@@ -12,8 +12,7 @@ class TransactionUpdateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Any authenticated user can attempt an update.
-        // The TransactionPolicy will authorize the actual request.
+        
         return true;
     }
 
@@ -24,7 +23,6 @@ class TransactionUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        // 'sometimes' means only validate the field if it's present in the request.
         // This is perfect for PATCH updates.
         return [
             'amount' => ['sometimes', 'numeric', 'min:0.01'],

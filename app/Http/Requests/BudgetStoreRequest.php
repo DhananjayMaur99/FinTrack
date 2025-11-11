@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 
 class BudgetStoreRequest extends FormRequest
 {
@@ -15,9 +16,14 @@ class BudgetStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category_id' => ['required', 'integer', 'exists:categories,id'],
+            // Ensure the chosen category exists and is owned by the authenticated user
+            'category_id' => [
+                'required',
+                'integer',
+                Rule::exists('categories', 'id')->where(fn($query) => $query->where('user_id', $this->user()->id)),
+            ],
             'limit'       => ['required_without:amount', 'numeric', 'min:0'],
-            'amount'      => ['sometimes', 'numeric', 'min:0'], // alias for limit
+            'amount'      => ['sometimes', 'numeric', 'min:0'], 
             'period'      => ['required', 'in:weekly,monthly,yearly'],
             'start_date'  => ['required', 'date'],
             'end_date'    => ['nullable', 'date', 'after_or_equal:start_date'],

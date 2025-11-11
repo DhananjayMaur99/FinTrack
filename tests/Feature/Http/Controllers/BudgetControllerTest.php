@@ -151,6 +151,7 @@ final class BudgetControllerTest extends TestCase
             'end_date' => now()->addMonth()->toDateString(),
         ]);
 
+        // create another category to ensure payload might try to change it, but updates should not permit category changes
         $newCategory = Category::factory()->for($user)->create();
 
         Sanctum::actingAs($user);
@@ -159,7 +160,7 @@ final class BudgetControllerTest extends TestCase
             'limit' => 750,
             'period' => 'yearly',
             'end_date' => now()->addYear()->toDateString(),
-            'category_id' => $newCategory->id,
+            // category_id intentionally omitted: category changes are not allowed on update
         ];
 
         $response = $this->putJson(route('budgets.update', $budget), $payload);
@@ -170,7 +171,8 @@ final class BudgetControllerTest extends TestCase
 
         $this->assertEquals(750.0, $budget->limit);
         $this->assertSame('yearly', $budget->period);
-        $this->assertSame($payload['category_id'], $budget->category_id);
+        // Category should remain unchanged
+        $this->assertSame($originalCategory->id, $budget->category_id);
         $this->assertSame($payload['end_date'], $budget->end_date?->toDateString());
     }
 

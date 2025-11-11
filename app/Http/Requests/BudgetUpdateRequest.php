@@ -15,9 +15,10 @@ class BudgetUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category_id' => ['sometimes', 'integer', 'exists:categories,id'],
+            // Category cannot be changed once a budget is created
+            'category_id' => ['prohibited'],
             'limit'       => ['sometimes', 'numeric', 'min:0'],
-            'amount'      => ['sometimes', 'numeric', 'min:0'], // alias
+            'amount'      => ['sometimes', 'numeric', 'min:0'], 
             'period'      => ['sometimes', 'in:weekly,monthly,yearly'],
             'start_date'  => ['sometimes', 'date'],
             'end_date'    => ['nullable', 'date', 'after_or_equal:start_date'],

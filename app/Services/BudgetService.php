@@ -30,6 +30,11 @@ class BudgetService
      */
     public function updateBudget(Budget $budget, array $payload): Budget
     {
+        // Ensure category cannot be changed via service payloads.
+        if (array_key_exists('category_id', $payload)) {
+            unset($payload['category_id']);
+        }
+
         $budget->fill($payload)->save();
         return $budget->refresh();
     }
