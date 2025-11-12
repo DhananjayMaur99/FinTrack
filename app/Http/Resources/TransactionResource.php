@@ -27,9 +27,9 @@ class TransactionResource extends JsonResource
             'category_id' => $this->category_id,
             'amount' => $this->amount,
             'description' => $this->description,
-            'date' => $this->date,
-            // 'date_local' => $this->date_local,
-            // 'occurred_at_utc' => $this->occurred_at_utc,
+            'date' => $this->date?->format('Y-m-d'), // Transaction date in user's timezone
+            'created_at' => $this->created_at?->toIso8601String(), // When transaction was recorded
+            'updated_at' => $this->updated_at?->toIso8601String(), // Last modification time
         ];
     }
 }

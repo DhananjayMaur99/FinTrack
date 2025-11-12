@@ -2,10 +2,9 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Carbon;
 
-class BudgetUpdateRequest extends FormRequest
+class BudgetUpdateRequest extends ApiRequest
 {
     public function authorize(): bool
     {

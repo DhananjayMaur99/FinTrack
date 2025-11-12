@@ -33,6 +33,8 @@ class BudgetResource extends JsonResource
                 'start' => optional($this->start_date)->format('Y-m-d'),
                 'end'   => optional($this->end_date)->format('Y-m-d'),
             ],
+            'created_at' => $this->created_at?->toIso8601String(),
+            'updated_at' => $this->updated_at?->toIso8601String(),
         ];
 
         if (is_array($this->progressStats)) {

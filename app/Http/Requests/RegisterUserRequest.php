@@ -2,11 +2,7 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Http\Exceptions\HttpResponseException;
-
-class RegisterUserRequest extends FormRequest
+class RegisterUserRequest extends ApiRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -29,19 +25,5 @@ class RegisterUserRequest extends FormRequest
             'password' => ['required', 'confirmed', 'min:8'],
             'timezone' => ['nullable', 'timezone:all'],
         ];
-    }
-
-    /**
-     * Handle a failed validation attempt.
-     *
-     * @param  Validator  $validator
-     * @return void
-     */
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(response()->json([
-            'message' => 'The given data was invalid.',
-            'errors' => $validator->errors(),
-        ], 422));
     }
 }

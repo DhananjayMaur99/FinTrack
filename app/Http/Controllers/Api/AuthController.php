@@ -9,6 +9,7 @@ use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\TransientToken;
 use Illuminate\Http\JsonResponse;
 
@@ -63,9 +64,9 @@ class AuthController extends Controller
 
         // Check if user exists and password matches
         if (! $user || ! password_verify($request->password, $user->password)) {
-            return response()->json([
-                'message' => 'Invalid credentials',
-            ], 401); // 401 Unauthorized
+            throw ValidationException::withMessages([
+                'email' => ['The provided credentials are incorrect.'],
+            ]);
         }
 
         $user->tokens()->get()->each->delete();
@@ -104,10 +105,6 @@ class AuthController extends Controller
     public function destroy(Request $request)
     {
         $user = $request->user();
-
-        if (! $user) {
-            return response()->json(['message' => 'Unauthenticated'], 401);
-        }
 
         // Revoke all tokens for this user (Sanctum)
         if (method_exists($user, 'tokens')) {

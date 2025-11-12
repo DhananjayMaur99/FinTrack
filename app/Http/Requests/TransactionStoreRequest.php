@@ -2,10 +2,9 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule; // <-- 1. Import the Rule class
+use Illuminate\Validation\Rule;
 
-class TransactionStoreRequest extends FormRequest
+class TransactionStoreRequest extends ApiRequest
 {
     /**
      * Determine if the user is authorized to make this request.
