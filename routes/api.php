@@ -29,4 +29,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
+    // Update user profile
+    Route::patch('/user', [AuthController::class, 'updateProfile']);
+    Route::put('/user', [AuthController::class, 'updateProfile']);
 });

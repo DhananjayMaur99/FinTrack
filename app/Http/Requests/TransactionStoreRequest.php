@@ -12,8 +12,6 @@ class TransactionStoreRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Any authenticated user can attempt to store a transaction.
-        // The policy will handle the 'create' logic.
         return true;
     }
 
@@ -53,10 +51,5 @@ class TransactionStoreRequest extends FormRequest
                 'date' => now($tz)->toDateString(),
             ]);
         }
-
-        // Always include UTC precise timestamp for ordering (not validated rule; optional internal use)
-        $this->merge([
-            'occurred_at_utc' => now('UTC')->toDateTimeString(),
-        ]);
     }
 }

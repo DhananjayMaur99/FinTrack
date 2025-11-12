@@ -25,11 +25,11 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->is('api/*')) {
 
                 // Default error message and status code
-                $message = 'Server Error';
-                $statusCode = 500;
+                // $message = 'Server Error';
+                // $statusCode = 500;
 
-                // If it's a "known" HTTP exception (404, 403, 401, etc.)
-                // we'll use its specific message and status code.
+                // // If it's a "known" HTTP exception (404, 403, 401, etc.)
+                // // we'll use its specific message and status code.
                 if ($e instanceof HttpException) {
                     $message = $e->getMessage() ?: Response::$statusTexts[$e->getStatusCode()];
                     $statusCode = $e->getStatusCode();

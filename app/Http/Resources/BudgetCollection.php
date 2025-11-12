@@ -23,9 +23,6 @@ class BudgetCollection extends ResourceCollection
     {
         return [
             'data' => $this->collection,
-            'links' => [
-                'self' => 'link-to-self', // You would typically generate pagination links here
-            ],
         ];
     }
 }

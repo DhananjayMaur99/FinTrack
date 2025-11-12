@@ -52,6 +52,7 @@ class BudgetController extends Controller
 
     public function update(BudgetUpdateRequest $request, Budget $budget, BudgetService $budgetService): BudgetResource
     {
+        
         $this->authorize('update', $budget);
         $budget = $budgetService->updateBudget($budget, $request->validated());
         $budget->load('category');

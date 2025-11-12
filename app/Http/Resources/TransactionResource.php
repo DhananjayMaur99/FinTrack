@@ -27,9 +27,9 @@ class TransactionResource extends JsonResource
             'category_id' => $this->category_id,
             'amount' => $this->amount,
             'description' => $this->description,
-            'date' => $this->date, // legacy local date used by budgets
-            'date_local' => $this->date_local,
-            'occurred_at_utc' => $this->occurred_at_utc,
+            'date' => $this->date,
+            // 'date_local' => $this->date_local,
+            // 'occurred_at_utc' => $this->occurred_at_utc,
         ];
     }
 }

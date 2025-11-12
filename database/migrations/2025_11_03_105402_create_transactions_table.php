@@ -22,8 +22,8 @@ return new class extends Migration
             $table->decimal('amount', 10, 2);
             $table->string('description')->nullable();
             $table->date('date');
-            $table->date('date_local')->nullable();
-            $table->timestamp('occurred_at_utc')->nullable();
+            // $table->date('date_local')->nullable();
+            // $table->timestamp('occurred_at_utc')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

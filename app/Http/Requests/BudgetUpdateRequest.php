@@ -18,12 +18,27 @@ class BudgetUpdateRequest extends FormRequest
             // Category cannot be changed once a budget is created
             'category_id' => ['prohibited'],
             'limit'       => ['sometimes', 'numeric', 'min:0'],
-            'amount'      => ['sometimes', 'numeric', 'min:0'], 
+            'amount'      => ['sometimes', 'numeric', 'min:0'],
             'period'      => ['sometimes', 'in:weekly,monthly,yearly'],
             'start_date'  => ['sometimes', 'date'],
             'end_date'    => ['nullable', 'date', 'after_or_equal:start_date'],
         ];
     }
+
+    /**
+     * Ensure the client provides at least one updatable field in the body.
+     * If the request body is empty (no updatable keys), we add a validation error.
+     */
+    // public function withValidator($validator): void
+    // {
+    //     $validator->after(function ($validator) {
+    //         $updatable = ['limit', 'amount', 'period', 'start_date', 'end_date'];
+
+    //         if (! $this->hasAny($updatable)) {
+    //             $validator->errors()->add('payload', 'At least one updatable field must be provided.');
+    //         }
+    //     });
+    // }
 
     protected function prepareForValidation(): void
     {

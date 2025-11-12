@@ -33,4 +33,18 @@ class CategoryUpdateRequest extends FormRequest
             'icon' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
     }
+
+    /**
+     * Ensure at least one updatable field is present in the request body for updates.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $updatable = ['name', 'icon'];
+
+            if (! $this->hasAny($updatable)) {
+                $validator->errors()->add('payload', 'At least one updatable field must be provided.');
+            }
+        });
+    }
 }

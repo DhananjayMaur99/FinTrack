@@ -16,15 +16,15 @@ class Transaction extends Model
         'amount',
         'description',
         'date',
-        'date_local',
-        'occurred_at_utc',
+        // 'date_local',
+        // 'occurred_at_utc',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'date' => 'date',
-        'date_local' => 'date',
-        'occurred_at_utc' => 'datetime',
+        // 'date_local' => 'date',
+        // 'occurred_at_utc' => 'datetime',
     ];
 
     // Correct relation: Transaction belongs to a User

@@ -14,7 +14,6 @@ class TransactionController extends Controller
 {
     /**
      * Display a listing of the user's transactions.
-     * SECURE: Now only shows transactions for the logged-in user.
      */
     public function index(Request $request): TransactionCollection
     {
@@ -26,7 +25,7 @@ class TransactionController extends Controller
 
     /**
      * Store a new transaction for the logged-in user.
-     * SECURE: Automatically assigns the transaction to the user.
+     * Automatically assigns the transaction to the user.
      */
     public function store(TransactionStoreRequest $request): TransactionResource
     {
@@ -38,11 +37,11 @@ class TransactionController extends Controller
 
         // Create the transaction using the relationship to auto-set user_id
         $payload = $request->validated();
-        // Persist both legacy 'date' (used by BudgetService) and new 'date_local'
-        if (! isset($payload['date_local']) && isset($payload['date'])) {
-            $payload['date_local'] = $payload['date'];
-        }
-        // occurred_at_utc is merged in prepareForValidation
+
+        // `date` is the canonical column in the schema. We avoid creating or
+        // persisting `date_local` (it isn't part of the current migration).
+        // occurred_at_utc is merged in prepareForValidation (no-op if column
+        // doesn't exist) and harmless to include in payload.
         $transaction = $user->transactions()->create($payload);
 
         return new TransactionResource($transaction);
@@ -69,9 +68,9 @@ class TransactionController extends Controller
         $this->authorize('update', $transaction);
 
         $payload = $request->validated();
-        if (array_key_exists('date', $payload)) {
-            $payload['date_local'] = $payload['date'];
-        }
+        // if (array_key_exists('date', $payload)) {
+        //     $payload['date_local'] = $payload['date'];
+        // }
         $transaction->update($payload);
 
         return new TransactionResource($transaction->refresh());

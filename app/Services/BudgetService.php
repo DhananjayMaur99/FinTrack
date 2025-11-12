@@ -63,16 +63,19 @@ class BudgetService
             return 0.0;
         }
 
+        // Use the canonical `date` column. Historically we used `date_local`,
+        // but the schema keeps `date` as the source of truth. Filter by the
+        // budget's start/end against `date` so queries are safe against the
+        // current migrations.
         $query = Transaction::query()
             ->where('user_id', $user->id)
             ->where('category_id', $budget->category_id);
 
-        // Use local date field; adjust if your column differs.
         if ($budget->start_date) {
-            $query->whereDate('date_local', '>=', $budget->start_date->toDateString());
+            $query->whereDate('date', '>=', $budget->start_date->toDateString());
         }
         if ($budget->end_date) {
-            $query->whereDate('date_local', '<=', $budget->end_date->toDateString());
+            $query->whereDate('date', '<=', $budget->end_date->toDateString());
         }
 
         return (float) $query->sum('amount');

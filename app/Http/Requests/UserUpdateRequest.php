@@ -5,44 +5,44 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class TransactionUpdateRequest extends FormRequest
+class UserUpdateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-
-        return true;
+        return $this->user() !== null;
     }
 
     /**
      * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
+        $userId = $this->user()->id;
+
         return [
-            'amount' => ['sometimes', 'numeric', 'min:0.01'],
-            'date' => ['sometimes', 'date'], // local date can be adjusted
-            'description' => ['sometimes', 'nullable', 'string'],
-            'category_id' => [
+            'name' => ['sometimes', 'string', 'max:255'],
+            'email' => [
                 'sometimes',
-                'nullable',
-                Rule::exists('categories', 'id')
-                    ->where('user_id', $this->user()->id)
-                    ->whereNull('deleted_at'), // don't update to a  soft deleted category
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($userId),
             ],
+            'timezone' => ['sometimes', 'nullable', 'timezone:all'],
+            'password' => ['sometimes', 'string', 'min:8', 'confirmed'],
         ];
     }
+
     /**
      * Ensure at least one updatable field is present in the request body for updates.
      */
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            $updatable = ['amount', 'date', 'description', 'category_id'];
+            $updatable = ['name', 'email', 'timezone', 'password'];
 
             if (! $this->hasAny($updatable)) {
                 $validator->errors()->add('payload', 'At least one updatable field must be provided.');

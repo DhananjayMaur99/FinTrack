@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginUserRequest;
 use App\Http\Requests\RegisterUserRequest;
+use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -23,8 +24,8 @@ class AuthController extends Controller
         $token = $user->createToken('api-token', ['*'], $expiresAt);
         return [
             'plain' => $token->plainTextToken,
-            'expires_at' => $expiresAt,
-            'expires_in' => $ttlMinutes * 60,
+            'expires_at' => $expiresAt->toIso8601String(),
+            'expires_in' => $ttlMinutes * 60, // seconds
         ];
     }
     // Register a new user and return a token
@@ -37,6 +38,7 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'timezone' => $request->timezone, // Optional timezone during registration
         ]);
 
         // create a token for new user - 1 hour expiry
@@ -44,7 +46,7 @@ class AuthController extends Controller
         return response()->json([
             'user' => $user,
             'token' => $issued['plain'],
-            'expires_at' => $issued['expires_at']->toIso8601String(),
+            'expires_at' => $issued['expires_at'],
             'expires_in' => $issued['expires_in'],
         ], 201);
     }
@@ -73,7 +75,7 @@ class AuthController extends Controller
         return response()->json([
             'user' => $user,
             'token' => $issued['plain'],
-            'expires_at' => $issued['expires_at']->toIso8601String(),
+            'expires_at' => $issued['expires_at'],
             'expires_in' => $issued['expires_in'],
         ]);
     }
@@ -131,8 +133,28 @@ class AuthController extends Controller
         $issued = $this->issueToken($request->user());
         return response()->json([
             'token' => $issued['plain'],
-            'expires_at' => $issued['expires_at']->toIso8601String(),
+            'expires_at' => $issued['expires_at'],
             'expires_in' => $issued['expires_in'],
+        ]);
+    }
+
+    /**
+     * Update the authenticated user's profile (name, email, timezone, password).
+     */
+    public function updateProfile(UserUpdateRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $data = $request->validated();
+
+        // Hash password if provided
+        if (isset($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        }
+
+        $user->update($data);
+
+        return response()->json([
+            'user' => $user->fresh(),
         ]);
     }
 }
