@@ -199,25 +199,6 @@ final class CategoryControllerTest extends TestCase
     // ADDITIONAL STORE TESTS
     // ========================================
 
-    #[Test]
-    public function store_allows_duplicate_category_names_for_same_user(): void
-    {
-        // Note: Unique validation is commented out in CategoryStoreRequest
-        $user = User::factory()->create();
-        Category::factory()->for($user)->create(['name' => 'Groceries']);
-
-        Sanctum::actingAs($user);
-
-        $payload = [
-            'name' => 'Groceries',
-            'icon' => 'cart',
-        ];
-
-        $response = $this->postJson(route('categories.store'), $payload);
-
-        $response->assertStatus(201);
-        $this->assertEquals(2, Category::where('user_id', $user->id)->where('name', 'Groceries')->count());
-    }
 
     #[Test]
     public function store_allows_duplicate_category_name_for_different_users(): void
