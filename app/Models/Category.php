@@ -13,6 +13,21 @@ class Category extends Model
     protected $fillable = ['user_id', 'name', 'icon'];
 
     /**
+     * Scope to return only models owned by the given user (or current auth user).
+     *
+     * Usage: Budget::owned()->get(); or Budget::owned($user)->paginate()
+     */
+    public function scopeOwned($query, $user = null)
+    {
+        $user = $user ?: auth()->user();
+        if (! $user) {
+            // if no user, return an empty query
+            return $query->whereRaw('0 = 1');
+        }
+        return $query->where('user_id', $user->id);
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

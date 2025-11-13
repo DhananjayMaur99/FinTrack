@@ -28,7 +28,7 @@ class CategoryController extends Controller
      */
     public function store(CategoryStoreRequest $request): CategoryResource
     {
-        
+
         $user = $request->user();
 
         $category = $user->categories()->create($request->validated());
@@ -41,9 +41,6 @@ class CategoryController extends Controller
      */
     public function show(Category $category): CategoryResource
     {
-
-        $this->authorize('view', $category);
-
         return new CategoryResource($category);
     }
 
@@ -52,10 +49,6 @@ class CategoryController extends Controller
      */
     public function update(CategoryUpdateRequest $request, Category $category): CategoryResource
     {
-
-        // We authorize that the user is allowed to 'update' this specific category.
-        $this->authorize('update', $category);
-
         $category->update($request->validated());
 
         return new CategoryResource($category);
@@ -66,12 +59,8 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category): Response
     {
-
-        $this->authorize('delete', $category);
-
         $category->delete();
 
         return response()->noContent();
     }
-
 }

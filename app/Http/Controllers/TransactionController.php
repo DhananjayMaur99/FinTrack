@@ -29,9 +29,6 @@ class TransactionController extends Controller
      */
     public function store(TransactionStoreRequest $request): TransactionResource
     {
-        // Authorize that the user is allowed to create (e.g., is not banned)
-        $this->authorize('create', Transaction::class);
-
         /** @var \App\Models\User $user */
         $user = $request->user();
 
@@ -49,24 +46,19 @@ class TransactionController extends Controller
 
     /**
      * Display a specific transaction.
-     * SECURE: Checks for ownership via the TransactionPolicy.
+     * SECURE: Checks for ownership via the AuthorizeUser middleware.
      */
     public function show(Transaction $transaction): TransactionResource
     {
-        // Check if the user is allowed to 'view' this specific transaction
-        $this->authorize('view', $transaction);
-
         return new TransactionResource($transaction);
     }
 
     /**
      * Update a specific transaction.
-     * SECURE: Checks for ownership via the TransactionPolicy.
+     * SECURE: Checks for ownership via the AuthorizeUser middleware.
      */
     public function update(TransactionUpdateRequest $request, Transaction $transaction): TransactionResource
     {
-        $this->authorize('update', $transaction);
-
         $payload = $request->validated();
         // if (array_key_exists('date', $payload)) {
         //     $payload['date_local'] = $payload['date'];
@@ -78,13 +70,10 @@ class TransactionController extends Controller
 
     /**
      * Delete a specific transaction.
-     * SECURE: Checks for ownership via the TransactionPolicy.
+     * SECURE: Checks for ownership via the AuthorizeUser middleware.
      */
     public function destroy(Transaction $transaction): Response
     {
-        // Check if the user is allowed to 'delete' this specific transaction
-        $this->authorize('delete', $transaction);
-
         $transaction->delete();
 
         return response()->noContent();

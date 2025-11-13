@@ -15,9 +15,12 @@ Route::post('/login', [AuthController::class, 'login']);
 // A user MUST send a valid Bearer Token to access them.
 Route::middleware('auth:sanctum')->group(function () {
     // Existing resource routes
-    Route::apiResource('categories', CategoryController::class);
-    Route::apiResource('transactions', TransactionController::class);
-    Route::apiResource('budgets', BudgetController::class);
+    Route::apiResource('categories', CategoryController::class)
+        ->middleware('owner:category');
+    Route::apiResource('transactions', TransactionController::class)
+        ->middleware('owner:transaction');
+    Route::apiResource('budgets', BudgetController::class)
+        ->middleware('owner:budget');
 
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);

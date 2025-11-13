@@ -33,7 +33,6 @@ class BudgetController extends Controller
 
     public function store(BudgetStoreRequest $request, BudgetService $budgetService): BudgetResource
     {
-        $this->authorize('create', Budget::class);
         $budget = $budgetService->createBudgetForUser(
             $request->user(),
             $request->validated()
@@ -44,7 +43,6 @@ class BudgetController extends Controller
 
     public function show(Budget $budget, BudgetService $budgetService): BudgetResource
     {
-        $this->authorize('view', $budget);
         $budget->load('category');
 
         return new BudgetResource($budget, $budgetService->getBudgetProgress($budget));
@@ -52,8 +50,6 @@ class BudgetController extends Controller
 
     public function update(BudgetUpdateRequest $request, Budget $budget, BudgetService $budgetService): BudgetResource
     {
-        
-        $this->authorize('update', $budget);
         $budget = $budgetService->updateBudget($budget, $request->validated());
         $budget->load('category');
 
@@ -62,7 +58,6 @@ class BudgetController extends Controller
 
     public function destroy(Budget $budget, BudgetService $budgetService): Response
     {
-        $this->authorize('delete', $budget);
         $budgetService->deleteBudget($budget);
 
         return response()->noContent();
