@@ -9,23 +9,26 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Category extends Model
 {
     use HasFactory, SoftDeletes;
-
-    protected $fillable = ['user_id', 'name', 'icon'];
+    /**
+     * The attributes that aren't mass assignable.
+     * We guard 'id' and 'user_id' to prevent unauthorized ownership changes.
+     */
+    protected $guarded = ['id', 'user_id'];
 
     /**
      * Scope to return only models owned by the given user (or current auth user).
      *
      * Usage: Budget::owned()->get(); or Budget::owned($user)->paginate()
      */
-    public function scopeOwned($query, $user = null)
-    {
-        $user = $user ?: auth()->user();
-        if (! $user) {
-            // if no user, return an empty query
-            return $query->whereRaw('0 = 1');
-        }
-        return $query->where('user_id', $user->id);
-    }
+    // public function scopeOwned($query, $user = null)
+    // {
+    //     $user = $user ?: auth()->user();
+    //     if (! $user) {
+    //         // if no user, return an empty query
+    //         return $query->whereRaw('0 = 1');
+    //     }
+    //     return $query->where('user_id', $user->id);
+    // }
 
     /**
      * Get the attributes that should be cast.
