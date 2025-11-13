@@ -7,13 +7,17 @@ use App\Http\Controllers\TransactionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::middleware('throttle:5,1')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+});
 
 
 // These routes are protected by Sanctum.
 // A user MUST send a valid Bearer Token to access them.
-Route::middleware('auth:sanctum')->group(function () {
+// Rate limited to 60 requests per minute
+
+Route::middleware(['throttle:60,1', 'auth:sanctum'])->group(function () {
     // Existing resource routes
     Route::apiResource('categories', CategoryController::class)
         ->middleware('owner:category');
@@ -30,10 +34,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Delete account (soft delete)
     Route::delete('/user', [AuthController::class, 'destroy']);
 
-    // get
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
+    // // get
+    // Route::get('/user', function (Request $request) {
+    //     return $request->user();
+    // });
 
     // Update user profile
     Route::put('/user', [AuthController::class, 'updateProfile']);
