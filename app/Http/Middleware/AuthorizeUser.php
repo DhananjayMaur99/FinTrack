@@ -19,7 +19,7 @@ class AuthorizeUser
         $model = null;
 
         if ($parameter) {
-            $model = $request->route($parameter);
+            $model = $request->{$parameter};
         } else {
             // autodetect first Eloquent model route param that looks like an owned resource
             foreach ($request->route()->parameters() as $param) {
@@ -37,7 +37,7 @@ class AuthorizeUser
 
         $user = $request->user();
         if (! $user) {
-            abort(401);
+            abort(401, 'non authenticated');
         }
 
         $ownerId = $model->user_id ?? $model->owner_id ?? null;
@@ -46,7 +46,7 @@ class AuthorizeUser
         }
 
         if ($ownerId !== $user->id) {
-            abort(403);
+            abort(403, "Unauthorised access");
         }
 
         return $next($request);

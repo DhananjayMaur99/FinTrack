@@ -6,11 +6,6 @@ use Illuminate\Support\Carbon;
 
 class BudgetUpdateRequest extends ApiRequest
 {
-    public function authorize(): bool
-    {
-        return $this->user() !== null;
-    }
-
     public function rules(): array
     {
         return [

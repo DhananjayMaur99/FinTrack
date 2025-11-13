@@ -17,8 +17,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Existing resource routes
     Route::apiResource('categories', CategoryController::class)
         ->middleware('owner:category');
+
     Route::apiResource('transactions', TransactionController::class)
         ->middleware('owner:transaction');
+
     Route::apiResource('budgets', BudgetController::class)
         ->middleware('owner:budget');
 
@@ -34,6 +36,5 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Update user profile
-    Route::patch('/user', [AuthController::class, 'updateProfile']);
     Route::put('/user', [AuthController::class, 'updateProfile']);
 });

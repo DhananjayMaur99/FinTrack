@@ -69,7 +69,7 @@ class AuthController extends Controller
             ]);
         }
 
-        $user->tokens()->get()->each->delete();
+        $user->tokens()->delete();
 
         // Create a new token - 1 hour expiry
         $issued = $this->issueToken($user);
@@ -151,7 +151,7 @@ class AuthController extends Controller
         $user->update($data);
 
         return response()->json([
-            'user' => $user->fresh(),
+            'user' => $user,
         ]);
     }
 }

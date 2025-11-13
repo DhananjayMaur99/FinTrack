@@ -223,10 +223,8 @@ Design Choices:
 
 - Users may omit a transaction date; the server defaults it to "today" in the user's timezone.
 - The user's timezone comes from `users.timezone` (or `X-Timezone` header, fallback to `config('app.timezone')`).
-- We persist:
-  - `date` (legacy local date) to keep compatibility with budget queries.
-  - `date_local` (explicit local date) for clarity.
-  - `occurred_at_utc` (UTC timestamp) for precise ordering and cross-timezone reporting.
+- We persist only `date` (DATE type) to maintain simplicity and match how users think about financial transactions.
+- Budget queries and transaction filtering use this single `date` field for all date range operations.
 
 ### 4.5 Budget Progress Computation
 

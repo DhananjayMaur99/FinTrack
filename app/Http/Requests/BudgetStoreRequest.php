@@ -19,7 +19,7 @@ class BudgetStoreRequest extends ApiRequest
             'category_id' => [
                 'required',
                 'integer',
-                Rule::exists('categories', 'id')->where(fn($query) => $query->where('user_id', $this->user()->id)),
+                Rule::exists('categories', 'id')->where(fn($query) => $query->where('user_id', $this->user()->id))->whereNull('deleted_at'),
             ],
             'limit'       => ['required', 'numeric', 'min:0'],
             'period'      => ['required', 'in:monthly,yearly'],

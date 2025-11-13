@@ -28,8 +28,8 @@ class CategoryStoreRequest extends ApiRequest
                 'required',
                 'string',
                 'max:255',
-                // Rule::unique('categories', 'name')
-                //     ->where(fn($query) => $query->where('user_id', $this->user()->id)),
+                Rule::unique('categories', 'name')
+                    ->where(fn($query) => $query->where('user_id', $this->user()->id)),
             ],
             'icon' => ['string', 'nullable'],
         ];

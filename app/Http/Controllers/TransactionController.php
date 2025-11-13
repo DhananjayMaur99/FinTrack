@@ -34,11 +34,6 @@ class TransactionController extends Controller
 
         // Create the transaction using the relationship to auto-set user_id
         $payload = $request->validated();
-
-        // `date` is the canonical column in the schema. We avoid creating or
-        // persisting `date_local` (it isn't part of the current migration).
-        // occurred_at_utc is merged in prepareForValidation (no-op if column
-        // doesn't exist) and harmless to include in payload.
         $transaction = $user->transactions()->create($payload);
 
         return new TransactionResource($transaction);
@@ -60,9 +55,6 @@ class TransactionController extends Controller
     public function update(TransactionUpdateRequest $request, Transaction $transaction): TransactionResource
     {
         $payload = $request->validated();
-        // if (array_key_exists('date', $payload)) {
-        //     $payload['date_local'] = $payload['date'];
-        // }
         $transaction->update($payload);
 
         return new TransactionResource($transaction->refresh());

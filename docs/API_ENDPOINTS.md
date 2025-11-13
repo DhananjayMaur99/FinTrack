@@ -524,9 +524,9 @@ Response 200:
       "category_id": 1,
       "amount": "45.99",
       "description": "Weekly groceries",
-      "date": "2025-11-04",           
-      "date_local": "2025-11-04",     
-      "occurred_at_utc": "2025-11-04T10:00:00.000000Z"
+      "date": "2025-11-04",
+      "created_at": "2025-11-04T10:00:00.000000Z",
+      "updated_at": "2025-11-04T10:00:00.000000Z"
     }
   ],
   "links": { ... },
@@ -564,8 +564,8 @@ Response 201:
     "amount": "45.99",
     "description": "Weekly groceries",
     "date": "2025-11-04",
-    "date_local": "2025-11-04",
-    "occurred_at_utc": "2025-11-04T10:00:00.000000Z"
+    "created_at": "2025-11-04T10:00:00.000000Z",
+    "updated_at": "2025-11-04T10:00:00.000000Z"
   }
 }
 
