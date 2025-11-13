@@ -22,7 +22,7 @@ class TransactionResource extends JsonResource
                 'id' => $category->id,
                 'name' => $category->name,
                 'icon' => $category->icon,
-                'is_deleted' => $category->trashed(),
+                // 'is_deleted' => $category->trashed(),
             ] : null,
             'category_id' => $this->category_id,
             'amount' => $this->amount,

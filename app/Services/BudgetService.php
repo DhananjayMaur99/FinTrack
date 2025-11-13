@@ -62,11 +62,7 @@ class BudgetService
         if (! $user) {
             return 0.0;
         }
-
-        // Use the canonical `date` column. Historically we used `date_local`,
-        // but the schema keeps `date` as the source of truth. Filter by the
-        // budget's start/end against `date` so queries are safe against the
-        // current migrations.
+        
         $query = Transaction::query()
             ->where('user_id', $user->id)
             ->where('category_id', $budget->category_id);

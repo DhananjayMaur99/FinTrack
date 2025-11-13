@@ -17,8 +17,7 @@ class BudgetUpdateRequest extends ApiRequest
             // Category cannot be changed once a budget is created
             'category_id' => ['prohibited'],
             'limit'       => ['sometimes', 'numeric', 'min:0'],
-            'amount'      => ['sometimes', 'numeric', 'min:0'],
-            'period'      => ['sometimes', 'in:weekly,monthly,yearly'],
+            'period'      => ['sometimes', 'in:monthly,yearly'],
             'start_date'  => ['sometimes', 'date'],
             'end_date'    => ['nullable', 'date', 'after_or_equal:start_date'],
         ];
@@ -28,23 +27,19 @@ class BudgetUpdateRequest extends ApiRequest
      * Ensure the client provides at least one updatable field in the body.
      * If the request body is empty (no updatable keys), we add a validation error.
      */
-    // public function withValidator($validator): void
-    // {
-    //     $validator->after(function ($validator) {
-    //         $updatable = ['limit', 'amount', 'period', 'start_date', 'end_date'];
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $updatable = ['limit', 'period', 'start_date', 'end_date'];
 
-    //         if (! $this->hasAny($updatable)) {
-    //             $validator->errors()->add('payload', 'At least one updatable field must be provided.');
-    //         }
-    //     });
-    // }
+            if (! $this->hasAny($updatable)) {
+                $validator->errors()->add('payload', 'At least one updatable field must be provided.');
+            }
+        });
+    }
 
     protected function prepareForValidation(): void
     {
-        if ($this->has('amount') && !$this->has('limit')) {
-            $this->merge(['limit' => $this->input('amount')]);
-        }
-
         // If start_date/period change but end_date is not sent, recompute it
         $start = $this->input('start_date');
         $period = $this->input('period');

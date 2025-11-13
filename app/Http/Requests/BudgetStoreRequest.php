@@ -21,9 +21,8 @@ class BudgetStoreRequest extends ApiRequest
                 'integer',
                 Rule::exists('categories', 'id')->where(fn($query) => $query->where('user_id', $this->user()->id)),
             ],
-            'limit'       => ['required_without:amount', 'numeric', 'min:0'],
-            'amount'      => ['sometimes', 'numeric', 'min:0'], 
-            'period'      => ['required', 'in:weekly,monthly,yearly'],
+            'limit'       => ['required', 'numeric', 'min:0'],
+            'period'      => ['required', 'in:monthly,yearly'],
             'start_date'  => ['required', 'date'],
             'end_date'    => ['nullable', 'date', 'after_or_equal:start_date'],
         ];
@@ -31,10 +30,6 @@ class BudgetStoreRequest extends ApiRequest
 
     protected function prepareForValidation(): void
     {
-        if ($this->has('amount') && !$this->has('limit')) {
-            $this->merge(['limit' => $this->input('amount')]);
-        }
-
         if (!$this->filled('end_date') && $this->filled('start_date')) {
             $this->merge([
                 'end_date' => $this->computeEndDate(
