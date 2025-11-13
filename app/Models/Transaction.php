@@ -15,23 +15,21 @@ class Transaction extends Model
      *
      * Usage: Budget::owned()->get(); or Budget::owned($user)->paginate()
      */
-    public function scopeOwned($query, $user = null)
-    {
-        $user = $user ?: auth()->user();
-        if (! $user) {
-            // if no user, return an empty query
-            return $query->whereRaw('0 = 1');
-        }
-        return $query->where('user_id', $user->id);
-    }
+    // public function scopeOwned($query, $user = null)
+    // {
+    //     $user = $user ?: auth()->user();
+    //     if (! $user) {
+    //         // if no user, return an empty query
+    //         return $query->whereRaw('0 = 1');
+    //     }
+    //     return $query->where('user_id', $user->id);
+    // }
 
-    protected $fillable = [
-        'user_id',
-        'category_id',
-        'amount',
-        'description',
-        'date',
-    ];
+    /**
+     * The attributes that aren't mass assignable.
+     * We guard 'id' and 'user_id' to prevent unauthorized ownership changes.
+     */
+    protected $guarded = ['id', 'user_id'];
 
     protected $casts = [
         'amount' => 'decimal:2',
