@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Modules\Budgets\Http\Requests;
 
+use App\Shared\Http\Requests\ApiRequest;
 use Illuminate\Support\Carbon;
 
 class BudgetUpdateRequest extends ApiRequest
@@ -12,7 +13,7 @@ class BudgetUpdateRequest extends ApiRequest
             // Category cannot be changed once a budget is created
             'category_id' => ['prohibited'],
             'limit'       => ['sometimes', 'numeric', 'min:0'],
-            'period'      => ['sometimes', 'in:monthly,yearly'],
+            'period'      => ['sometimes', 'in:weekly,monthly,yearly'],
             'start_date'  => ['sometimes', 'date'],
             'end_date'    => ['nullable', 'date', 'after_or_equal:start_date'],
         ];
@@ -48,10 +49,11 @@ class BudgetUpdateRequest extends ApiRequest
     private function computeEndDate(string $start, string $period): string
     {
         $startC = Carbon::parse($start)->startOfDay();
+        // NoOverflow keeps a 31st start date from landing two months out.
         return match ($period) {
             'weekly'  => $startC->copy()->addWeek()->subDay()->toDateString(),
-            'yearly'  => $startC->copy()->addYear()->subDay()->toDateString(),
-            default   => $startC->copy()->addMonth()->subDay()->toDateString(),
+            'yearly'  => $startC->copy()->addYearNoOverflow()->subDay()->toDateString(),
+            default   => $startC->copy()->addMonthNoOverflow()->subDay()->toDateString(),
         };
     }
 }

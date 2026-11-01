@@ -1,38 +1,39 @@
 <?php
 
-namespace App\Http\Middleware;
+namespace App\Shared\Http\Middleware;
 
 use Closure;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Illuminate\Database\Eloquent\Model;
 
 class AuthorizeUser
 {
     /**
      * Handle an incoming request.
      *
+     * Reads the model strictly from the resolved route binding — never from
+     * `$request->{$parameter}`, which checks request input (query/body) before
+     * falling back to the route, letting a body/query field with the same name
+     * as the route parameter shadow the real bound model.
+     *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, ?string $parameter = null)
+    public function handle(Request $request, Closure $next, string $parameter)
     {
-        $model = null;
+        $route = $request->route();
+        $hasParameter = $route && in_array($parameter, $route->parameterNames(), true);
 
-        if ($parameter) {
-            $model = $request->{$parameter};
-        } else {
-            // autodetect first Eloquent model route param that looks like an owned resource
-            foreach ($request->route()->parameters() as $param) {
-                if ($param instanceof Model && (isset($param->user_id) || isset($param->owner_id))) {
-                    $model = $param;
-                    break;
-                }
-            }
+        // Route doesn't declare this parameter at all (index/store) — nothing to check yet.
+        if (! $hasParameter) {
+            return $next($request);
         }
 
-        // If no model bound (index/store), just continue.
-        if (! $model) {
-            return $next($request);
+        $model = $route->parameter($parameter);
+
+        // Declared but didn't resolve to a model — fail closed rather than let it through.
+        if (! $model instanceof Model) {
+            abort(404);
         }
 
         $user = $request->user();
@@ -45,8 +46,8 @@ class AuthorizeUser
             abort(403, 'Ownership cannot be determined for this resource.');
         }
 
-        if ($ownerId !== $user->id) {
-            abort(403, "Unauthorised access");
+        if ((int) $ownerId !== (int) $user->id) {
+            abort(403, 'Unauthorised access');
         }
 
         return $next($request);

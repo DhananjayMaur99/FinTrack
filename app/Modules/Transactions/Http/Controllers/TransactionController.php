@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Modules\Transactions\Http\Controllers;
 
-use App\Http\Requests\TransactionStoreRequest;
-use App\Http\Requests\TransactionUpdateRequest;
-use App\Http\Resources\TransactionCollection;
-use App\Http\Resources\TransactionResource;
-use App\Models\Transaction;
+use App\Modules\Transactions\Http\Requests\TransactionStoreRequest;
+use App\Modules\Transactions\Http\Requests\TransactionUpdateRequest;
+use App\Modules\Transactions\Http\Resources\TransactionCollection;
+use App\Modules\Transactions\Http\Resources\TransactionResource;
+use App\Modules\Transactions\Models\Transaction;
+use App\Shared\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -17,8 +18,10 @@ class TransactionController extends Controller
      */
     public function index(Request $request): TransactionCollection
     {
+        $perPage = min(max($request->integer('per_page', 15), 1), 100);
+
         // We use the relationship to get only the user's transactions
-        $transactions = $request->user()->transactions()->latest()->paginate();
+        $transactions = $request->user()->transactions()->latest('date')->latest('id')->paginate($perPage);
 
         return new TransactionCollection($transactions);
     }
@@ -29,7 +32,7 @@ class TransactionController extends Controller
      */
     public function store(TransactionStoreRequest $request): TransactionResource
     {
-        /** @var \App\Models\User $user */
+        /** @var \App\Modules\Users\Models\User $user */
         $user = $request->user();
 
         // Create the transaction using the relationship to auto-set user_id

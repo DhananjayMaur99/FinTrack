@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Modules\Budgets\Http\Requests;
 
+use App\Shared\Http\Requests\ApiRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 
@@ -22,7 +23,7 @@ class BudgetStoreRequest extends ApiRequest
                 Rule::exists('categories', 'id')->where(fn($query) => $query->where('user_id', $this->user()->id))->whereNull('deleted_at'),
             ],
             'limit'       => ['required', 'numeric', 'min:0'],
-            'period'      => ['required', 'in:monthly,yearly'],
+            'period'      => ['required', 'in:weekly,monthly,yearly'],
             'start_date'  => ['required', 'date'],
             'end_date'    => ['nullable', 'date', 'after_or_equal:start_date'],
         ];
@@ -43,10 +44,11 @@ class BudgetStoreRequest extends ApiRequest
     private function computeEndDate(string $start, string $period): string
     {
         $startC = Carbon::parse($start)->startOfDay();
+        // NoOverflow keeps a 31st start date from landing two months out.
         return match ($period) {
             'weekly'  => $startC->copy()->addWeek()->subDay()->toDateString(),
-            'yearly'  => $startC->copy()->addYear()->subDay()->toDateString(),
-            default   => $startC->copy()->addMonth()->subDay()->toDateString(), //default = monthly
+            'yearly'  => $startC->copy()->addYearNoOverflow()->subDay()->toDateString(),
+            default   => $startC->copy()->addMonthNoOverflow()->subDay()->toDateString(), //default = monthly
         };
     }
 }

@@ -2,21 +2,38 @@
 
 namespace Database\Factories;
 
-use App\Models\Category;
-use App\Models\User;
+use App\Modules\Categories\Models\Category;
+use App\Modules\Users\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CategoryFactory extends Factory
 {
     protected $model = Category::class;
 
+    /**
+     * Reasons people actually log, so seeded data reads like a real ledger.
+     */
+    private const REASONS = [
+        ['Groceries', '🛒'],
+        ['Rent', '🏠'],
+        ['Transport', '🚌'],
+        ['Eating out', '🍜'],
+        ['Utilities', '💡'],
+        ['Health', '💊'],
+        ['Shopping', '🛍️'],
+        ['Entertainment', '🎬'],
+        ['Subscriptions', '📺'],
+        ['Salary', '💰'],
+    ];
+
     public function definition(): array
     {
+        [$name, $icon] = $this->faker->unique()->randomElement(self::REASONS);
+
         return [
             'user_id' => User::factory(),
-            'name' => $this->faker->word(),
-            // icon is optional
-            'icon' => $this->faker->optional()->regexify('[A-Za-z0-9]{8}'),
+            'name' => $name,
+            'icon' => $icon,
         ];
     }
 }

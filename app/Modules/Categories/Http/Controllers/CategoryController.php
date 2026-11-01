@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Modules\Categories\Http\Controllers;
 
-use App\Http\Requests\CategoryStoreRequest;
-use App\Http\Requests\CategoryUpdateRequest;
-use App\Http\Resources\CategoryCollection;
-use App\Http\Resources\CategoryResource;
-use App\Models\Category;
+use App\Modules\Categories\Http\Requests\CategoryStoreRequest;
+use App\Modules\Categories\Http\Requests\CategoryUpdateRequest;
+use App\Modules\Categories\Http\Resources\CategoryCollection;
+use App\Modules\Categories\Http\Resources\CategoryResource;
+use App\Modules\Categories\Models\Category;
+use App\Shared\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 

@@ -1,19 +1,21 @@
 <?php
 
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\BudgetController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\TransactionController;
+use App\Modules\Auth\Http\Controllers\AuthController;
+use App\Modules\Budgets\Http\Controllers\BudgetController;
+use App\Modules\Categories\Http\Controllers\CategoryController;
+use App\Modules\Transactions\Http\Controllers\TransactionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 
 
 // These routes are protected by Sanctum.
 // A user MUST send a valid Bearer Token to access them.
-Route::middleware('auth:sanctum')->group(function () {
+// Names are prefixed with `api.` so apiResource doesn't claim the same route
+// names as the Blade web routes (e.g. `transactions.store`) and hijack them.
+Route::middleware('auth:sanctum')->name('api.')->group(function () {
     // Existing resource routes
     Route::apiResource('categories', CategoryController::class)
         ->middleware('owner:category');
@@ -26,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/logout-other-devices', [AuthController::class, 'logoutOtherDevices']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
     // Delete account (soft delete)
     Route::delete('/user', [AuthController::class, 'destroy']);

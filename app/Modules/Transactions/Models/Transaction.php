@@ -1,7 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Modules\Transactions\Models;
 
+use App\Modules\Categories\Models\Category;
+use App\Modules\Users\Models\User;
+use Database\Factories\TransactionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,28 +13,22 @@ class Transaction extends Model
 {
     use HasFactory, SoftDeletes;
 
-    /**
-     * Scope to return only models owned by the given user (or current auth user).
-     *
-     * Usage: Budget::owned()->get(); or Budget::owned($user)->paginate()
-     */
-    public function scopeOwned($query, $user = null)
-    {
-        $user = $user ?: auth()->user();
-        if (! $user) {
-            // if no user, return an empty query
-            return $query->whereRaw('0 = 1');
-        }
-        return $query->where('user_id', $user->id);
-    }
-
     protected $fillable = [
-        'user_id',
         'category_id',
+        'type',
         'amount',
         'description',
         'date',
     ];
+
+    /**
+     * Moving models out of App\Models breaks Laravel's default factory-name
+     * guessing, so the factory class is wired up explicitly here.
+     */
+    protected static function newFactory(): TransactionFactory
+    {
+        return TransactionFactory::new();
+    }
 
     protected $casts = [
         'amount' => 'decimal:2',

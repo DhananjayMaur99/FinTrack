@@ -1,13 +1,14 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Modules\Auth\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\LoginUserRequest;
-use App\Http\Requests\RegisterUserRequest;
-use App\Http\Requests\UserUpdateRequest;
-use App\Models\User;
+use App\Shared\Http\Controllers\Controller;
+use App\Modules\Auth\Http\Requests\LoginUserRequest;
+use App\Modules\Auth\Http\Requests\RegisterUserRequest;
+use App\Modules\Auth\Http\Requests\UserUpdateRequest;
+use App\Modules\Users\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\TransientToken;
@@ -29,6 +30,23 @@ class AuthController extends Controller
             'expires_in' => $ttlMinutes * 60, // seconds
         ];
     }
+
+    /**
+     * For same-origin requests from the Blade+Vue web app (made stateful by
+     * EnsureFrontendRequestsAreStateful), also log the user into the session
+     * guard so subsequent /api/* calls authenticate via cookie, not a token.
+     * Bearer-token API clients never have a session, so this is a no-op for them.
+     */
+    protected function startSessionForStatefulRequest(Request $request, User $user): void
+    {
+        if (! $request->hasSession()) {
+            return;
+        }
+
+        Auth::guard('web')->login($user);
+        $request->session()->regenerate();
+    }
+
     // Register a new user and return a token
     public function register(RegisterUserRequest $request)
     {
@@ -41,6 +59,8 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
             'timezone' => $request->timezone, // Optional timezone during registration
         ]);
+
+        $this->startSessionForStatefulRequest($request, $user);
 
         // create a token for new user - 1 hour expiry
         $issued = $this->issueToken($user);
@@ -69,7 +89,11 @@ class AuthController extends Controller
             ]);
         }
 
-        $user->tokens()->delete();
+        // Note: we deliberately do NOT revoke the user's other tokens here, so a login on a
+        // second device (e.g. the mobile PWA) doesn't silently log the user out elsewhere.
+        // Use /logout-other-devices for an explicit "sign out everywhere else" action.
+
+        $this->startSessionForStatefulRequest($request, $user);
 
         // Create a new token - 1 hour expiry
         $issued = $this->issueToken($user);
@@ -94,8 +118,33 @@ class AuthController extends Controller
             $token->delete();
         }
 
+        if ($request->hasSession()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
         return response()->json([
             'message' => 'Logged out successfully',
+        ], 200);
+    }
+
+    /**
+     * Revoke every token for the current user except the one used for this request.
+     */
+    public function logoutOtherDevices(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $currentToken = $user->currentAccessToken();
+
+        $user->tokens()
+            ->when($currentToken && method_exists($currentToken, 'getKey'), function ($query) use ($currentToken) {
+                $query->where('id', '!=', $currentToken->getKey());
+            })
+            ->delete();
+
+        return response()->json([
+            'message' => 'Logged out of other devices',
         ], 200);
     }
 

@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Modules\Categories\Http\Requests;
 
+use App\Shared\Http\Requests\ApiRequest;
 use Illuminate\Validation\Rule;
 
 class CategoryStoreRequest extends ApiRequest
@@ -11,7 +12,7 @@ class CategoryStoreRequest extends ApiRequest
      */
     public function authorize(): bool
     {
-        // We handle authorization in the controller with Policies. 
+        // Ownership is enforced by the `owner` (AuthorizeUser) route middleware, not here.
         return true;
     }
 

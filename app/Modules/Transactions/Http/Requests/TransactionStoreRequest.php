@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Modules\Transactions\Http\Requests;
 
+use App\Shared\Http\Requests\ApiRequest;
 use Illuminate\Validation\Rule;
 
 class TransactionStoreRequest extends ApiRequest
@@ -23,11 +24,14 @@ class TransactionStoreRequest extends ApiRequest
     {
         return [
             'amount' => ['required', 'numeric', 'min:0.01'],
+            'type' => ['sometimes', 'in:income,expense'],
             // date is now optional; we will default it if absent
             'date' => ['sometimes', 'date'],
             'description' => ['nullable', 'string'],
+            // Every transaction must have a reason — the DB column is NOT NULL,
+            // and the product requirement is that every entry needs one.
             'category_id' => [
-                'nullable',
+                'required',
                 Rule::exists('categories', 'id')
                     ->where('user_id', $this->user()->id)
                     ->whereNull('deleted_at'),
@@ -49,6 +53,10 @@ class TransactionStoreRequest extends ApiRequest
             $this->merge([
                 'date' => now($tz)->toDateString(),
             ]);
+        }
+
+        if (! $this->filled('type')) {
+            $this->merge(['type' => 'expense']);
         }
     }
 }

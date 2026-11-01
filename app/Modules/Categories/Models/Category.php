@@ -1,7 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Modules\Categories\Models;
 
+use App\Modules\Transactions\Models\Transaction;
+use App\Modules\Users\Models\User;
+use Database\Factories\CategoryFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,21 +13,15 @@ class Category extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['user_id', 'name', 'icon'];
+    protected $fillable = ['name', 'icon'];
 
     /**
-     * Scope to return only models owned by the given user (or current auth user).
-     *
-     * Usage: Budget::owned()->get(); or Budget::owned($user)->paginate()
+     * Moving models out of App\Models breaks Laravel's default factory-name
+     * guessing, so the factory class is wired up explicitly here.
      */
-    public function scopeOwned($query, $user = null)
+    protected static function newFactory(): CategoryFactory
     {
-        $user = $user ?: auth()->user();
-        if (! $user) {
-            // if no user, return an empty query
-            return $query->whereRaw('0 = 1');
-        }
-        return $query->where('user_id', $user->id);
+        return CategoryFactory::new();
     }
 
     /**

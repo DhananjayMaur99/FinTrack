@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Modules\Categories\Http\Requests;
 
+use App\Shared\Http\Requests\ApiRequest;
 use Illuminate\Validation\Rule;
 
 class CategoryUpdateRequest extends ApiRequest

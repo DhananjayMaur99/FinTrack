@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Modules\Transactions\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -25,6 +25,7 @@ class TransactionResource extends JsonResource
                 // 'is_deleted' => $category->trashed(),
             ] : null,
             'category_id' => $this->category_id,
+            'type' => $this->type,
             'amount' => $this->amount,
             'description' => $this->description,
             'date' => $this->date?->format('Y-m-d'), // Transaction date in user's timezone

@@ -6,6 +6,137 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+    --font-ledger: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    /* Ledger palette — money in green, money out rust, brass for warnings. */
+    --color-canvas: #f7f5f0;
+    --color-surface: #ffffff;
+    --color-ink: #15201b;
+    --color-ink-soft: #5a655e;
+    --color-ink-faint: #8e9790;
+    --color-line: #e3dfd5;
+    --color-accent: #1e5a43;
+    --color-accent-dim: #e6efe9;
+    --color-out: #b4472a;
+    --color-out-dim: #f7e7e1;
+    --color-brass: #9a7318;
+    --color-brass-dim: #f6edd8;
+}
+
+@layer base {
+    [x-cloak] {
+        display: none !important;
+    }
+
+    body {
+        background-color: var(--color-canvas);
+        color: var(--color-ink);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Money and dates always align in columns. */
+    .tabular {
+        font-family: var(--font-ledger);
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+@layer components {
+    .sheet {
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-line);
+        border-radius: 0.625rem;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border-radius: 0.5rem;
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        line-height: 1.25rem;
+        cursor: pointer;
+        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .btn-primary {
+        background-color: var(--color-accent);
+        color: #fff;
+    }
+
+    .btn-primary:hover {
+        background-color: #18492f;
+    }
+
+    .btn-ghost {
+        border: 1px solid var(--color-line);
+        background-color: var(--color-surface);
+        color: var(--color-ink-soft);
+    }
+
+    .btn-ghost:hover {
+        border-color: var(--color-ink-faint);
+        color: var(--color-ink);
+    }
+
+    .btn-danger {
+        border: 1px solid var(--color-out);
+        color: var(--color-out);
+        background-color: transparent;
+    }
+
+    .btn-danger:hover {
+        background-color: var(--color-out);
+        color: #fff;
+    }
+
+    .input {
+        width: 100%;
+        border: 1px solid var(--color-line);
+        border-radius: 0.5rem;
+        background-color: var(--color-surface);
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9375rem;
+        color: var(--color-ink);
+        outline: none;
+    }
+
+    .input:focus {
+        border-color: var(--color-accent);
+        box-shadow: 0 0 0 3px var(--color-accent-dim);
+    }
+
+    .label {
+        display: block;
+        margin-bottom: 0.3rem;
+        font-size: 0.8125rem;
+        color: var(--color-ink-soft);
+    }
+
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 0.125rem 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .gauge-track {
+        height: 0.5rem;
+        width: 100%;
+        overflow: hidden;
+        border-radius: 999px;
+        background-color: var(--color-line);
+    }
+
+    .gauge-fill {
+        height: 100%;
+        border-radius: 999px;
+        transition: width 0.3s ease;
+    }
 }

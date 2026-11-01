@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Models;
+namespace App\Modules\Users\Models;
 
-
-
+use App\Modules\Budgets\Models\Budget;
+use App\Modules\Categories\Models\Category;
+use App\Modules\Transactions\Models\Transaction;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,11 +13,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-
 /**
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Category[] $categories
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Transaction[] $transactions
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Budget[] $budgets
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Modules\Categories\Models\Category[] $categories
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Modules\Transactions\Models\Transaction[] $transactions
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Modules\Budgets\Models\Budget[] $budgets
  */
 class User extends Authenticatable
 {
@@ -50,6 +51,15 @@ class User extends Authenticatable
     protected $casts = [
         'password' => 'hashed',
     ];
+
+    /**
+     * Moving models out of App\Models breaks Laravel's default factory-name
+     * guessing, so the factory class is wired up explicitly here.
+     */
+    protected static function newFactory(): UserFactory
+    {
+        return UserFactory::new();
+    }
 
     /**
      * Get the categories for this user.

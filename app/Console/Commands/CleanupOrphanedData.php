@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Budget;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 

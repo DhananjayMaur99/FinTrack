@@ -15,12 +15,16 @@ return Application::configure(basePath: dirname(__DIR__))
         // Force all API routes to accept JSON responses
         // This prevents redirect responses on validation failures
         $middleware->api(prepend: [
-            \App\Http\Middleware\ForceJsonResponse::class,
+            // Lets same-origin requests (the Blade+Vue web app) authenticate via a
+            // Sanctum session cookie instead of a bearer token. External/API clients
+            // are unaffected and keep using bearer tokens.
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            \App\Shared\Http\Middleware\ForceJsonResponse::class,
         ]);
-        
+
         $middleware->alias([
-        'owner' => \App\Http\Middleware\AuthorizeUser::class,
-    ]);
+            'owner' => \App\Shared\Http\Middleware\AuthorizeUser::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Laravel will automatically return JSON for API routes

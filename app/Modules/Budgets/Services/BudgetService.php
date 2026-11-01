@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Services;
+namespace App\Modules\Budgets\Services;
 
-use App\Models\Budget;
-use App\Models\User;
-use App\Models\Transaction; // ensure this exists
+use App\Modules\Budgets\Models\Budget;
+use App\Modules\Users\Models\User;
+use App\Modules\Transactions\Models\Transaction;
 
 class BudgetService
 {
@@ -62,10 +62,18 @@ class BudgetService
         if (! $user) {
             return 0.0;
         }
-        
+
         $query = Transaction::query()
             ->where('user_id', $user->id)
-            ->where('category_id', $budget->category_id);
+            ->where('type', 'expense');
+
+        // Category-scoped budgets filter to that category; "overall" budgets
+        // (category_id === null) count every expense. Filtering unconditionally
+        // by `category_id` here would turn into `WHERE category_id IS NULL`
+        // for overall budgets, which no transaction has, so it never matched.
+        if ($budget->category_id !== null) {
+            $query->where('category_id', $budget->category_id);
+        }
 
         if ($budget->start_date) {
             $query->whereDate('date', '>=', $budget->start_date->toDateString());

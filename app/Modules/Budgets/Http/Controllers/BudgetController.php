@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Modules\Budgets\Http\Controllers;
 
-use App\Http\Requests\BudgetStoreRequest;
-use App\Http\Requests\BudgetUpdateRequest;
-use App\Http\Resources\BudgetResource;
-use App\Models\Budget;
-use App\Services\BudgetService;
+use App\Modules\Budgets\Http\Requests\BudgetStoreRequest;
+use App\Modules\Budgets\Http\Requests\BudgetUpdateRequest;
+use App\Modules\Budgets\Http\Resources\BudgetResource;
+use App\Modules\Budgets\Models\Budget;
+use App\Modules\Budgets\Services\BudgetService;
+use App\Shared\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
